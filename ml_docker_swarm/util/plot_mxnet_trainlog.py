@@ -62,8 +62,8 @@ def plot_log(log_file):
 	plt.tick_params(axis='x', which='major', labelsize=18)
 	plt.grid(color='lavender')
 
- 	plt.savefig(fig_name, dpi=my_dpi, bbox_inches='tight', pad_inches = 0)
- 	plt.close()
+	plt.savefig(fig_name, dpi=my_dpi, bbox_inches='tight', pad_inches = 0)
+	plt.close()
 
 if __name__ == '__main__':
 	log_file = sys.argv[1]

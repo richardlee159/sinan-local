@@ -144,9 +144,9 @@ def main():
     # print label_nxt_t.shape
     label_nxt_t = np.greater_equal(label_nxt_t, QoS)
     # +1 viol, (+1 sat, +2 viol), (+1 sat, +2 sat, +3 viol)
-    print "violations: ", np.sum(label_nxt_t[:, 0]), 
-    print np.sum(np.logical_not(label_nxt_t[:,0])*label_nxt_t[:, 1]), 
-    print np.sum(np.logical_not(label_nxt_t[:,0]) * np.logical_not(label_nxt_t[:,1]) * label_nxt_t[:, 2])
+    print("violations: ", np.sum(label_nxt_t[:, 0]), end=' ') 
+    print(np.sum(np.logical_not(label_nxt_t[:,0])*label_nxt_t[:, 1]), end=' ') 
+    print(np.sum(np.logical_not(label_nxt_t[:,0]) * np.logical_not(label_nxt_t[:,1]) * label_nxt_t[:, 2]))
     
     n_v_v = 0
     n_s_v = 0
@@ -167,10 +167,10 @@ def main():
             else:
                 n_s_s += 1
 
-    print 'train n_v_v = ', n_v_v
-    print 'train n_s_v = ', n_s_v
-    print 'train n_s_s = ', n_s_s
-    print 'train n_v_v = ', n_v_v
+    print('train n_v_v = ', n_v_v)
+    print('train n_s_v = ', n_s_v)
+    print('train n_s_s = ', n_s_s)
+    print('train n_v_v = ', n_v_v)
     # return
 
     # print label_nxt_t.shape
@@ -182,16 +182,16 @@ def main():
     # label_nxt_t = np.squeeze(label_nxt_t[:, :, 0])[:, -1]
     # final_label_t = np.where(label_nxt_t < QoS, 0, 1)
 
-    print 'internal_rep_train.shape = ', internal_rep_train.shape
-    print 'nxt_k_data_t.shape = ', nxt_k_data_t.shape
+    print('internal_rep_train.shape = ', internal_rep_train.shape)
+    print('nxt_k_data_t.shape = ', nxt_k_data_t.shape)
 
     # lat_info_t = np.squeeze(lat_data_t[:, 4, :, :])
     X_train = np.concatenate((internal_rep_train, nxt_k_data_t), axis=1)
     #X_train = np.concatenate((lat_info_t, nxt_k_data_t), axis=1)
-    print 'X_train.shape = ', X_train.shape
+    print('X_train.shape = ', X_train.shape)
     # print X_train[0, :]
     y_train = final_label_t
-    print 'y_train.shape = ', y_train.shape
+    print('y_train.shape = ', y_train.shape)
 
     #-------------------------- validation data ----------------------------#
     sys_data_v = np.load(data_dir + '/sys_data_valid.npy')
@@ -234,10 +234,10 @@ def main():
     # lat_info_v = np.squeeze(lat_data_v[:, 4, :, :])
     X_test = np.concatenate((internal_rep_valid, nxt_k_data_v), axis=1)
     #X_test = np.concatenate((lat_info_v, nxt_k_data_v), axis=1)
-    print 'X_test.shape = ', X_test.shape
+    print('X_test.shape = ', X_test.shape)
     # print X_test[0, :]
     y_test = final_label_v
-    print 'y_test.shape = ', y_test.shape
+    print('y_test.shape = ', y_test.shape)
 
     # # upsampling
     # viol_idx_test = []
@@ -275,7 +275,7 @@ def main():
     dtest = xgb.DMatrix(X_test, label=y_test)
 
     progress = dict() # Store accuracy result
-    watchlist = [(dtrain,'train-err'),(dtest,'eval-err')]
+    watchlist = [(dtrain,'train'),(dtest,'eval')]
     tmp = time.time()
     # Train model
     params={'objective': 'binary:logistic',
@@ -284,7 +284,7 @@ def main():
             'feature_selector': 'greedy',
             'eta': 0.01,
             'max_depth': 6,
-            'tree_method': 'gpu_exact', # 'gpu_exact',
+            'tree_method': 'exact', # 'gpu_exact',
             'gamma': 0.0,
             'grow_policy': 'lossguide'}
 
@@ -295,19 +295,27 @@ def main():
     print('0.1 threshold')
     ypred = bst.predict(dtest)
     binary_ypred = np.greater(ypred, 0.1 * np.ones_like(ypred))
-    print np.sum(binary_ypred) * 1.0 / binary_ypred.shape[0], np.sum(y_test) * 1.0 / y_test.shape[0]
-    print 'false postive = ', np.sum(np.logical_not(y_test) * binary_ypred) * 1.0 / y_test.shape[0]
-    print 'false negative = ', np.sum(np.logical_not(binary_ypred) * y_test) * 1.0 / y_test.shape[0]
+    print(np.sum(binary_ypred) * 1.0 / binary_ypred.shape[0], np.sum(y_test) * 1.0 / y_test.shape[0])
+    print('false postive = ', np.sum(np.logical_not(y_test) * binary_ypred) * 1.0 / y_test.shape[0])
+    print('false negative = ', np.sum(np.logical_not(binary_ypred) * y_test) * 1.0 / y_test.shape[0])
 
     print('0.25 threshold')
     binary_ypred = np.greater(ypred, 0.25 * np.ones_like(ypred))
-    print np.sum(binary_ypred) * 1.0 / binary_ypred.shape[0], np.sum(y_test) * 1.0 / y_test.shape[0]
-    print 'false postive = ', np.sum(np.logical_not(y_test) * binary_ypred) * 1.0 / y_test.shape[0]
-    print 'false negative = ', np.sum(np.logical_not(binary_ypred) * y_test) * 1.0 / y_test.shape[0]
+    print(np.sum(binary_ypred) * 1.0 / binary_ypred.shape[0], np.sum(y_test) * 1.0 / y_test.shape[0])
+    print('false postive = ', np.sum(np.logical_not(y_test) * binary_ypred) * 1.0 / y_test.shape[0])
+    print('false negative = ', np.sum(np.logical_not(binary_ypred) * y_test) * 1.0 / y_test.shape[0])
 
     if not os.path.isdir('./xgb_model/'):
         os.mkdir('./xgb_model/')
     bst.save_model('./xgb_model/social_nn_sys_state_look_forward_' + str(look_forward) + '.model')
+
+    ypred0 = ypred[y_test == 0]
+    ypred1 = ypred[y_test == 1]
+    plt.hist([ypred0, ypred1], label=['y_true=0', 'y_true=1'], density=True, stacked=True, range=[0, 1], bins=50)
+    plt.xlabel('y_pred (prob. QoS violation)')
+    plt.ylabel('Probability Density')
+    plt.legend()
+    plt.savefig("pdf.png")
 
 # print list(ypred)
 '''
@@ -337,7 +345,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="command for training")
     parser.add_argument('--data-dir', type=str, required=True)
     parser.add_argument('--look-forward', type=int, default=4)
-    parser.add_argument('--gpus', type=str, default='0', help='the gpus will be used, e.g "0,1,2,3"')
+    parser.add_argument('--gpus', type=str, help='the gpus will be used, e.g "0,1,2,3"')
     parser.add_argument('--kv-store', type=str, default='local', help='the kvstore type')
     parser.add_argument('--batch-size', type=int, default=2048, help='the batch size')
     # parser.add_argument('--log', default='test', type=str)

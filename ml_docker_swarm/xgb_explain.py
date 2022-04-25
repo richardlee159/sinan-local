@@ -62,11 +62,11 @@ args = parser.parse_args()
 
 
 BoostTree = xgb.Booster()  # init model
-print 'load ', args.xgb_prefix + str(args.xgb_look_forward) + '.model'
+print('load ', args.xgb_prefix + str(args.xgb_look_forward) + '.model')
 BoostTree.load_model(args.xgb_prefix + str(args.xgb_look_forward) + '.model')  # load data
 
 feature_score = BoostTree.get_score(importance_type='gain')
-print len(feature_score)
+print(len(feature_score))
 sorted_features = {}
 for f in feature_score:
 	f_int = int(f.replace('f', ''))
@@ -74,16 +74,16 @@ for f in feature_score:
 	sorted_features[f_int] = feature_score[f]
 feature_array = sorted(sorted_features, key=sorted_features.get, reverse=True)
 for f in feature_array:
-	print f, ' ', sorted_features[f]
+	print(f, ' ', sorted_features[f])
 
 # first 64 elements are extracted from ml
 mock_feature_array = list(range(0, 64 + len(Services)*5 ))
-print 'mock_feature array ', mock_feature_array
+print('mock_feature array ', mock_feature_array)
 # feature_array = np.array(feature_array)
 mock_feature_array = np.array(mock_feature_array)
 
 raw_feature_array = mock_feature_array[64:].reshape([len(Services), -1])
-print raw_feature_array.shape
+print(raw_feature_array.shape)
 
 def find_in_feature_array(val):
 	for i in range(0, raw_feature_array.shape[0]):

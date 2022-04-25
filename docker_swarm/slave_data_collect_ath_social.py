@@ -107,7 +107,7 @@ def docker_ps():
 			'utf-8').splitlines()
 	for i in range(1, len(texts)):
 		c_name = [s for s in texts[i].split(' ') if s][-1]
-		if Stackname not in c_name:
+		if Stackname not in c_name or 'jaeger' in c_name:
 			continue
 		try:
 			c_id = get_container_id(c_name)
@@ -183,6 +183,8 @@ def update_replica(updated_service_list):
 	updated_containers = {}	# indexed by service
 	for i in range(1, len(texts)):
 		c_name = [s for s in texts[i].split(' ') if s][-1]
+		if Stackname not in c_name or 'jaeger' in c_name:
+			continue
 		c_id = get_container_id(c_name)
 		service = ''
 		for s in Services:
@@ -374,7 +376,7 @@ def get_memory_usage():
 
 	for container in ContainerList:
 		# pseudo_file = '/sys/fs/cgroup/memory/docker/' + str(ContainerIds[tier]) + '/memory.stat'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'memory' / 'docker' / ContainerStats[container]['id'] / 'memory.stat'
+		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'memory' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'memory.stat'
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			for line in lines:
@@ -409,7 +411,7 @@ def get_docker_cpu_usage():
 		fail = False
 		for container in ContainerList:
 			# pseudo_file = '/sys/fs/cgroup/cpuacct/docker/' + ContainerStats[container]['id'] + '/cpuacct.usage'
-			pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'cpuacct' / 'docker' / ContainerStats[container]['id'] / 'cpuacct.usage'
+			pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'cpuacct' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'cpuacct.usage'
 			if not os.path.isfile(str(pseudo_file)):
 				fail = True
 				break
@@ -441,7 +443,7 @@ def get_io_usage():
 	for container in ContainerList:	
 		# io sectors (512 bytes)
 		# pseudo_file = '/sys/fs/cgroup/blkio/docker/' + str(ContainerIds[container])  + '/blkio.sectors_recursive'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'docker' / ContainerStats[container]['id']  / 'blkio.throttle.io_service_bytes_recursive'
+		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'blkio.throttle.io_service_bytes_recursive'
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			if len(lines) > 0:
@@ -457,7 +459,7 @@ def get_io_usage():
 
 		# io services
 		# pseudo_file = '/sys/fs/cgroup/blkio/docker/' + str(ContainerIds[container])  + '/blkio.io_serviced_recursive'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'docker' / ContainerStats[container]['id'] / 'blkio.throttle.io_serviced_recursive'
+		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'blkio.throttle.io_serviced_recursive'
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			for line in lines:

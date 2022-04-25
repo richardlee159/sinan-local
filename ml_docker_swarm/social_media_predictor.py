@@ -62,7 +62,7 @@ parser.add_argument('--model-prefix', dest='model_prefix', type=str, default='./
 parser.add_argument('--load-epoch', dest='load_epoch', type=int, default=200)
 parser.add_argument('--xgb-prefix', dest='xgb_prefix', type=str, 
 	default='./xgb_model/social_nn_sys_state_look_forward_')
-parser.add_argument('--gpus', type=str, default='0', help='the gpus will be used, e.g "0,1,2,3"')
+parser.add_argument('--gpus', type=str, help='the gpus will be used, e.g "0,1,2,3"')
 parser.add_argument('--kv-store', type=str, default='local', help='the kvstore type')
 
 args = parser.parse_args()
@@ -383,7 +383,7 @@ def test():
 	InternalSysState.set_params(load_params[1], load_params[2], allow_missing=True, allow_extra=True)
 
 	BoostTree = xgb.Booster()  # init model
-	print 'load ', args.xgb_prefix + str(XgbLookForward) + '.model'
+	print('load ', args.xgb_prefix + str(XgbLookForward) + '.model')
 	BoostTree.load_model(args.xgb_prefix + str(XgbLookForward) + '.model')  # load data
 
 	info = {}
@@ -418,7 +418,7 @@ def test():
 
 	t_s = time.time()
 	pred = _predict(info)
-	print 'inf time: ', time.time() - t_s
+	print('inf time: ', time.time() - t_s)
 	# print pred
 
 def main():
@@ -509,7 +509,7 @@ def main():
 				info = json.loads(cmd.split('----')[-1])
 				pred_lat = _predict(info)
 				# print pred_lat
-				ret_msg = 'pred----' + json.dumps(pred_lat) + '\n'
+				ret_msg = 'pred----' + json.dumps(eval(str(pred_lat))) + '\n'
 				host_sock.sendall(ret_msg.encode('utf-8'))
 
 			elif cmd.startswith('terminate'):

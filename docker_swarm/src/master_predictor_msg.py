@@ -12,9 +12,9 @@ from util import *
 def setup_gpu(username, gpu_host, work_dir, script, gpus):
 	slave_cmd = 'cd ' + work_dir + ';'
 	if len(gpus) > 0:
-		slave_cmd += 'python ' + script + ' --gpus ' + ','.join([str(g) for g in gpus])
+		slave_cmd += sys.executable + ' ' + script + ' --gpus ' + ','.join([str(g) for g in gpus])
 	else:
-		slave_cmd += 'python ' + script
+		slave_cmd += sys.executable + ' ' + script
 	# slave_cmd += 'python social_media_predictor.py --gpus ' + ','.join([str(g) for g in gpus])
 	print(slave_cmd)
 	p = ssh(username=username, host=gpu_host, cmd=slave_cmd)

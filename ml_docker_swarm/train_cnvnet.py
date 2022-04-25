@@ -142,7 +142,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="command for training")
     parser.add_argument('--data-dir', type=str, required=True)
-    parser.add_argument('--gpus', type=str, default='0', help='the gpus will be used, e.g "0,1,2,3"')
+    parser.add_argument('--gpus', type=str, help='the gpus will be used, e.g "0,1,2,3"')
     parser.add_argument('--lr', type=float, default=0.0005, help='initialization learning rate')
     parser.add_argument('--mom', type=float, default=0.9, help='momentum for sgd')
     parser.add_argument('--bn-mom', type=float, default=0.9, help='momentum for batch normlization')

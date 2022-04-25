@@ -129,11 +129,11 @@ def plot_dir(dir_name):
 		# print cpu_limit
 		# print colors
 		if i % 3 == 0:
-			plt.plot(time, cpu_limit[t], linestyle = '-', label = t, color = colors[i/3], linewidth = 1.0)
+			plt.plot(time, cpu_limit[t], linestyle = '-', label = t, color = colors[i//3], linewidth = 1.0)
 		elif i % 3 == 1:
-			plt.plot(time, cpu_limit[t], linestyle = '-.', label = t, color = colors[i/3], linewidth = 1.0)
+			plt.plot(time, cpu_limit[t], linestyle = '-.', label = t, color = colors[i//3], linewidth = 1.0)
 		else:
-			plt.plot(time, cpu_limit[t], linestyle = ':', label = t, color = colors[i/3], linewidth = 1.0)
+			plt.plot(time, cpu_limit[t], linestyle = ':', label = t, color = colors[i//3], linewidth = 1.0)
 
 	plt.legend(prop={'size': 10})
 	# ax.legend(loc='upper right', bbox_to_anchor=(0.0, 0.0), fancybox=True, fontsize=15, ncol=2, frameon=True)
@@ -143,8 +143,8 @@ def plot_dir(dir_name):
  #    	bottom=False,      # ticks along the bottom edge are off
  #    	top=False,         # ticks along the top edge are off
  #    	labelbottom=False) # labels along the bottom edge are off
- 	plt.tick_params(axis='both', which='major', labelsize=18)
- 	plt.grid(color='lavender')
+	plt.tick_params(axis='both', which='major', labelsize=18)
+	plt.grid(color='lavender')
 
 
  	# pred_viol
@@ -164,11 +164,11 @@ def plot_dir(dir_name):
  #    	bottom=False,      # ticks along the bottom edge are off
  #    	top=False,         # ticks along the top edge are off
  #    	labelbottom=False) # labels along the bottom edge are off
- 	plt.tick_params(axis='both', which='major', labelsize=18)
- 	plt.grid(color='lavender')
+	plt.tick_params(axis='both', which='major', labelsize=18)
+	plt.grid(color='lavender')
 
- 	plt.savefig(fig_name, dpi=my_dpi, bbox_inches='tight', pad_inches = 0)
- 	plt.close()
+	plt.savefig(fig_name, dpi=my_dpi, bbox_inches='tight', pad_inches = 0)
+	plt.close()
 
 
 def test():
