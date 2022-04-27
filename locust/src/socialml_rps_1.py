@@ -203,9 +203,9 @@ class SocialMediaUser(HttpUser):
         num_media = 0
         medium = []
         media_types = []
-        if random.random() < 0.05:
-            # num_media = random.randint(1, 2)
-            num_media = 1
+        if random.random() < 0.25:
+            num_media = random.randint(1, 4)
+            # num_media = 1
         for i in range(0, num_media):
             img_name = random.choice(image_names)
             if 'jpg' in img_name:
@@ -242,7 +242,7 @@ class SocialMediaUser(HttpUser):
         #     data=body, name="/compose_post")
 
         r = self.client.post(url, params=params,
-            data=body, name='all', timeout=1.5)
+            data=body, name='compose_post', timeout=10)
 
         if r.status_code > 202:
             logging.warning('compose_post resp.status = %d, text=%s' %(r.status_code,
@@ -264,7 +264,7 @@ class SocialMediaUser(HttpUser):
         # r = self.client.get(url, params=args,
         #     verify=False, name='/read_home_timeline')
 
-        r = self.client.get(url, params=args, name='all', timeout=1.5)
+        r = self.client.get(url, params=args, name='read_home_line', timeout=10)
 
         if r.status_code > 202:
             logging.warning('read_home_timeline resp.status = %d, text=%s' %(r.status_code,
@@ -285,7 +285,7 @@ class SocialMediaUser(HttpUser):
         # r = self.client.get(url, params=args,
         #     verify=False, name='/read_home_timeline')
 
-        r = self.client.get(url, params=args, name='all', timeout=1.5)
+        r = self.client.get(url, params=args, name='read_user_timeline', timeout=10)
 
         if r.status_code > 202:
             logging.warning('read_user_timeline resp.status = %d, text=%s' %(r.status_code,
