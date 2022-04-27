@@ -41,7 +41,7 @@ IP_ADDR = {}
 IP_ADDR["autosys-12"]     = "10.1.0.4"
 
 service_config = {
-    "nginx-thrift":         {'max_replica': 4},
+    "nginx-thrift":         {'max_replica': 1},
     "compose-post-service": {'max_replica': 1},
     "compose-post-redis":   {'max_replica': 1},
     "text-service":         {'max_replica': 1},
@@ -49,8 +49,8 @@ service_config = {
     "user-service":         {'max_replica': 1},
     "user-memcached":       {'max_replica': 1},
     "user-mongodb":         {'max_replica': 1},
-    "media-service":        {'max_replica': 4, 'max_cpus': 4},
-    "media-filter-service": {'max_replica': 16, 'max_cpus': 128},
+    "media-service":        {'max_replica': 1},
+    "media-filter-service": {'max_replica': 1, 'max_cpus': 16},
     "unique-id-service":    {'max_replica': 1},
     "url-shorten-service":  {'max_replica': 1},
     "user-mention-service": {'max_replica': 1},
@@ -64,7 +64,7 @@ service_config = {
     "write-home-timeline-rabbitmq": {'max_replica': 1},
     "write-user-timeline-service":  {'max_replica': 1},
     "write-user-timeline-rabbitmq": {'max_replica': 1},
-    "home-timeline-service":    {'max_replica': 4},
+    "home-timeline-service":    {'max_replica': 1},
     "home-timeline-redis":      {'max_replica': 1},
     "social-graph-service":     {'max_replica': 1},
     "social-graph-redis":   {'max_replica': 1},
