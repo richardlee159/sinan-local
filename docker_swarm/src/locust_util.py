@@ -49,6 +49,7 @@ def run_locust(client_script, csv, nginx_ip, volumes,
 			cmd += src + ':' + targ + ' '
 	cmd += 'yz2297/locust_openwhisk '	# locust docker image
 	cmd += '-f ' + client_script + ' '
+	cmd += '-r ' + str(10) + ' '
 	cmd += '--csv ' + csv + ' '
 	cmd += '--headless -t ' + str(duration) + 's '
 	cmd += '--host ' + nginx_ip + ' '
