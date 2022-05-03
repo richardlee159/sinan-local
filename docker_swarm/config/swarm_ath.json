@@ -1,14 +1,9 @@
 {
     "nodes": {
-        "ath-8": {
-            "cpus": 88,
-            "ip_addr": "ath-8-ip",
+        "autosys-12": {
+            "cpus": 32,
+            "ip_addr": "10.1.0.4",
             "label": "type=compute"
-        },
-        "ath-9": {
-            "cpus": 88,
-            "ip_addr": "ath-9-ip",
-            "label": "type=data"
         }
     },
     "replica_cpus": 4,
@@ -51,28 +46,28 @@
             "replica": 1
         },
         "home-timeline-service": {
-            "cpus": 16,
-            "max_cpus": 16,
-            "max_replica": 4,
-            "replica": 4
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
         },
         "media-filter-service": {
-            "cpus": 128,
-            "max_cpus": 128,
-            "max_replica": 16,
-            "replica": 16
-        },
-        "media-service": {
-            "cpus": 2,
-            "max_cpus": 2,
-            "max_replica": 4,
-            "replica": 4
-        },
-        "nginx-thrift": {
             "cpus": 16,
             "max_cpus": 16,
-            "max_replica": 4,
-            "replica": 4
+            "max_replica": 1,
+            "replica": 1
+        },
+        "media-service": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "nginx-thrift": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
         },
         "post-storage-memcached": {
             "cpus": 4,
