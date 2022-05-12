@@ -41,7 +41,7 @@ IP_ADDR = {}
 IP_ADDR["autosys-12"]     = "10.1.0.4"
 
 service_config = {
-    "nginx-thrift":         {'max_replica': 1},
+    "nginx-thrift":         {'max_replica': 1, 'max_cpus': 12},
     "compose-post-service": {'max_replica': 1},
     "compose-post-redis":   {'max_replica': 1},
     "text-service":         {'max_replica': 1},
@@ -50,11 +50,11 @@ service_config = {
     "user-memcached":       {'max_replica': 1},
     "user-mongodb":         {'max_replica': 1},
     "media-service":        {'max_replica': 1},
-    "media-filter-service": {'max_replica': 1, 'max_cpus': 16},
+    "media-filter-service": {'max_replica': 1, 'max_cpus': 20},
     "unique-id-service":    {'max_replica': 1},
     "url-shorten-service":  {'max_replica': 1},
     "user-mention-service": {'max_replica': 1},
-    "post-storage-service": {'max_replica': 1, 'max_cpus': 16},
+    "post-storage-service": {'max_replica': 1},
     "post-storage-memcached":   {'max_replica': 1},
     "post-storage-mongodb":     {'max_replica': 1},
     "user-timeline-service":    {'max_replica': 1},

@@ -52,8 +52,8 @@
             "replica": 1
         },
         "media-filter-service": {
-            "cpus": 16,
-            "max_cpus": 16,
+            "cpus": 20,
+            "max_cpus": 20,
             "max_replica": 1,
             "replica": 1
         },
@@ -64,8 +64,8 @@
             "replica": 1
         },
         "nginx-thrift": {
-            "cpus": 4,
-            "max_cpus": 4,
+            "cpus": 12,
+            "max_cpus": 12,
             "max_replica": 1,
             "replica": 1
         },
@@ -82,8 +82,8 @@
             "replica": 1
         },
         "post-storage-service": {
-            "cpus": 16,
-            "max_cpus": 16,
+            "cpus": 4,
+            "max_cpus": 4,
             "max_replica": 1,
             "replica": 1
         },
