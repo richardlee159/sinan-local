@@ -103,6 +103,8 @@ parser.add_argument('--locust-stats', dest='locust_stats', type=str,
 	default='social_stats_history.csv')
 parser.add_argument('--locust-log', dest='locust_log', type=str,
 	default='/mnt/locust_log/social_locust_log.txt')
+parser.add_argument('--locust-docker-compose', dest='locust_docker_compose', type=str, 
+	default='docker-compose-socialml.yml')
 # -----------------------------------------------------------------------
 # parse args
 # -----------------------------------------------------------------------
@@ -187,6 +189,7 @@ LocustStats = LocustStatsDir / args.locust_stats
 LocustVolumes = [(str(LocustDir / 'src'), '/mnt/locust'), 
 				 (str(LocustDir / 'base64_images'), '/mnt/social_images'), 
 				 (str(LocustStatsDir), '/mnt/locust_log')]
+LocustDockerCompose = LocustDir / args.locust_docker_compose
 
 # ------------------------------------------------------
 # Scaling out/in control
@@ -1241,11 +1244,10 @@ def run_exp(users, log_dir):
 		servers=Servers, slave_socks=SlaveSocks)
 	time.sleep(5)
 
-	locust_p = run_locust(
-		client_script=LocustScript, csv=LocustCsv, 
-		nginx_ip='http://127.0.0.1:8080', volumes=LocustVolumes,
-		log_file=LocustLog, duration=ExpTime + 120,
-		users=users, quiet=True)
+	locust_p = run_locust_docker_compose(
+		docker_compose_file=LocustDockerCompose,
+		duration=ExpTime + 120, users=users,
+		workers=2, quiet=True)
 
 	assert(locust_p != None)
 

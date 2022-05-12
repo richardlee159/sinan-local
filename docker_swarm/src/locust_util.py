@@ -20,6 +20,7 @@ def run_locust_docker_compose(docker_compose_file,
 		workers = max(1, users // 2)
 	# env variables
 	cmd = 'USERS=' + str(users) + ' EXP_TIME=' + str(duration) + 's '
+	cmd += 'WORKERS=' + str(workers) + ' '
 	cmd += 'docker-compose -f ' + str(docker_compose_file) + \
 		' up --scale worker=' + str(workers)
 	print(cmd)
