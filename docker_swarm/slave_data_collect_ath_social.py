@@ -10,10 +10,12 @@ import argparse
 import logging
 from pathlib import Path
 import copy
+sys.path.append(str(Path.cwd() / 'src'))
+import k8s_util
 
 # slave is responsible for adjusting resources on each server
 # collecting per-server information, including cpu, network & memory
-# assume each vm can hold multiple containers
+# assume each vm can hold multiple pods
 
 # -----------------------------------------------------------------------
 # parser args definition
@@ -24,7 +26,7 @@ parser.add_argument('--cpus', dest='cpus', type=int, required=True)
 # parser.add_argument('--max-memory', dest='max_memory',type=str, required=True)	# in MB
 parser.add_argument('--server-port', dest='server_port',type=int, default=40011)
 parser.add_argument('--service-config', dest='service_config', type=str, required=True)
-parser.add_argument('--stack-name', dest='stack_name', type=str, required=True)
+parser.add_argument('--namespace', dest='namespace', type=str, required=True)
 
 # -----------------------------------------------------------------------
 # parse args
@@ -32,7 +34,7 @@ parser.add_argument('--stack-name', dest='stack_name', type=str, required=True)
 args = parser.parse_args()
 # global variables
 Cpus 	 = args.cpus
-Stackname = args.stack_name
+Namespace = args.namespace
 # MaxMemory 	 = args.max_memory
 ServerPort   = args.server_port
 MsgBuffer    = ''
@@ -47,9 +49,9 @@ with open(args.service_config, 'r') as f:
 		ServiceConfig[s] = {}
 		ServiceConfig[s]['cpus'] = 0
 
-Containers  = {}	# indexed by service name
-ContainerList = []	# a list of all container names
-ContainerStats = {}	# indexed by container names
+Pods  = {}	# indexed by service name
+PodList = []	# a list of all pod names
+PodStats = {}	# indexed by pod names
 ServiceReplicaUpdated = []	# services whose replica is just updated
 
 # logging.basicConfig(level=logging.INFO,
@@ -58,192 +60,135 @@ ServiceReplicaUpdated = []	# services whose replica is just updated
 logging.basicConfig(level=logging.WARNING,
                     format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-def clear_container_stats():
-	global Containers
-	global ContainerList
-	global ContainerStats
-	Containers = {}
-	ContainerList = []
-	ContainerStats = {}
+def clear_pod_stats():
+	global Pods
+	global PodList
+	global PodStats
+	Pods = {}
+	PodList = []
+	PodStats = {}
 
-def create_container_stats(service, container_name, container_id):
-	global Containers
-	global ContainerList
-	global ContainerStats
+def create_pod_stats(service, pod_name, pod_id):
+	global Pods
+	global PodList
+	global PodStats
 
-	logging.info("Create stats for container %s of %s" %(container_name, service))
-	assert service in container_name # make sure service matches container_name
-	if service not in Containers:
-		Containers[service] = []
-	assert container_name not in Containers[service]
-	assert container_name not in ContainerStats
-	assert container_name not in ContainerList
-	Containers[service].append(container_name)
-	ContainerList.append(container_name)
-	ContainerStats[container_name] = {}
-	ContainerStats[container_name]['id']   = container_id
-	ContainerStats[container_name]['pids'] = []
+	logging.info("Create stats for pod %s of %s" %(pod_name, service))
+	assert service in pod_name # make sure service matches pod_name
+	if service not in Pods:
+		Pods[service] = []
+	assert pod_name not in Pods[service]
+	assert pod_name not in PodStats
+	assert pod_name not in PodList
+	Pods[service].append(pod_name)
+	PodList.append(pod_name)
+	PodStats[pod_name] = {}
+	PodStats[pod_name]['id']   = pod_id
 	# variables below are cummulative
-	ContainerStats[container_name]['rx_packets'] = 0
-	ContainerStats[container_name]['rx_bytes'] = 0
-	ContainerStats[container_name]['tx_packets'] = 0
-	ContainerStats[container_name]['tx_bytes'] = 0
-	ContainerStats[container_name]['page_faults'] = 0
-	ContainerStats[container_name]['cpu_time'] = 0
-	ContainerStats[container_name]['io_bytes'] = 0
-	ContainerStats[container_name]['io_serviced'] = 0
+	PodStats[pod_name]['rx_packets'] = 0
+	PodStats[pod_name]['rx_bytes'] = 0
+	PodStats[pod_name]['tx_packets'] = 0
+	PodStats[pod_name]['tx_bytes'] = 0
+	PodStats[pod_name]['page_faults'] = 0
+	PodStats[pod_name]['cpu_time'] = 0
+	PodStats[pod_name]['io_bytes'] = 0
+	PodStats[pod_name]['io_serviced'] = 0
 
-# used when previous container failed and a new one is rebooted
-def reset_container_id_pids():
-	logging.info('reset_container_id_pids')
-	clear_container_stats()
-	docker_ps()
+# used when previous pod failed and a new one is rebooted
+def reset_pod_ids():
+	logging.info('reset_pod_ids')
+	clear_pod_stats()
+	kubectl_get_pods()
 
-def docker_ps():
+def kubectl_get_pods():
 	global Services
-	global Stackname
+	global Namespace
 
-	texts = subprocess.check_output('docker ps', shell=True, stderr=sys.stderr).decode(
-			'utf-8').splitlines()
-	for i in range(1, len(texts)):
-		c_name = [s for s in texts[i].split(' ') if s][-1]
-		if Stackname not in c_name or 'jaeger' in c_name:
-			continue
-		try:
-			c_id = get_container_id(c_name)
-		except:
-			logging.warning('container %s disappears after docker ps' %c_name)
-			continue
-		service = ''
-		sim_c_name = c_name.replace(Stackname, '')
-		for s in Services:
-			# choose the longest matching name
-			if s in sim_c_name and len(s) > len(service):	
-				service = s
-		if service == '':
-			logging.warning("docker ps container_name = %s, container_id = %s has no matching service" %(c_name, c_id))
+	p = subprocess.run(['kubectl', 'get', 'pods', f'-n={Namespace}',
+		r'-o=jsonpath={range .items[*]}{.metadata.uid} {.metadata.name}{"\n"}{end}'],
+		stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, text=True, check=True)
+	for i in p.stdout.splitlines():
+		pod_id, pod_name = i.split()
+		service = pod_name.rsplit('-', 2)[0]
+		if service not in Services:
 			continue
 
-		logging.info("docker ps container_name = %s, container_id = %s service = %s" %(c_name, c_id, service))
-		create_container_stats(service, c_name, c_id)
-		update_container_pids(c_name)
+		logging.info("kubectl get pods name = %s, id = %s service = %s" %(pod_name, pod_id, service))
+		create_pod_stats(service, pod_name, pod_id)
 
-def get_container_id(container_name):
-	cmd = "docker inspect --format=\"{{.Id}}\" " + container_name
-	container_id = subprocess.check_output(cmd, shell=True, stderr=sys.stderr).decode(
-		'utf-8').replace('\n', '')
-	return str(container_id)
+def remove_stale_pods(service, updated_pods):
+	global Pods
+	global PodList
+	global PodStats
 
-def update_container_pids(container_name):
-	global ContainerStats
-	assert container_name in ContainerStats
-	cmd = "docker inspect -f \"{{ .State.Pid }}\" " + ContainerStats[container_name]['id']
-	pid_strs = subprocess.check_output(cmd, shell=True, stderr=sys.stderr).decode(
-		'utf-8').split('\n')
-	for pid_str in pid_strs:
-		if pid_str != '':
-			ContainerStats[container_name]['pids'].append(pid_str)
-
-def get_container_pids(container_name, pid_list):
-	assert container_name in ContainerStats
-	cmd = "docker inspect -f \"{{ .State.Pid }}\" " + ContainerStats[container_name]['id']
-	pid_strs = subprocess.check_output(cmd, shell=True, stderr=sys.stderr).decode(
-		'utf-8').split('\n')
-	for pid_str in pid_strs:
-		if pid_str != '':
-			pid_list.append(pid_str)
-
-def remove_stale_container(service, updated_containers):
-	global Containers
-	global ContainerList
-	global ContainerStats
-
-	if service in Containers:
-		stale_containers = [c for c in Containers[service] if c not in updated_containers]
+	if service in Pods:
+		stale_pods = [c for c in Pods[service] if c not in updated_pods]
 	else:
-		stale_containers = []
-	Containers[service] = list(updated_containers)
-	for c in stale_containers:
-		del ContainerStats[c]
-	ContainerList = [c for c in ContainerList if c not in stale_containers]
+		stale_pods = []
+	Pods[service] = list(updated_pods)
+	for c in stale_pods:
+		del PodStats[c]
+	PodList = [c for c in PodList if c not in stale_pods]
 
 # used when replica of a service is updated
 def update_replica(updated_service_list):
-	global Containers
-	global ContainerList
-	global ContainerStats
+	global Pods
+	global PodList
+	global PodStats
 	global ServiceReplicaUpdated
 
-	# todo: update Containers[service] & ContainerList & ContainerStats
-	# delete records of removed containers
+	# todo: update Pod[service] & PodList & PodStats
+	# delete records of removed pods
 
-	new_cnames = []
-	texts = subprocess.check_output('docker ps', shell=True, stderr=sys.stderr).decode(
-			'utf-8').splitlines()
-	updated_containers = {}	# indexed by service
-	for i in range(1, len(texts)):
-		c_name = [s for s in texts[i].split(' ') if s][-1]
-		if Stackname not in c_name or 'jaeger' in c_name:
-			continue
-		c_id = get_container_id(c_name)
-		service = ''
-		for s in Services:
-			# choose the longest matching name
-			if s in c_name and len(s) > len(service):	
-				service = s
-		if service == '':
-			logging.warning("docker ps container_name = %s, container_id = %s has no matching service" %(c_name, c_id))
+	new_pod_names = []
+	updated_pods = {}	# indexed by service
+	p = subprocess.run(['kubectl', 'get', 'pods', f'-n={Namespace}',
+		r'-o=jsonpath={range .items[*]}{.metadata.uid} {.metadata.name}{"\n"}{end}'],
+		stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, text=True, check=True)
+	for i in p.stdout.splitlines():
+		pod_id, pod_name = i.split()
+		service = pod_name.rsplit('-', 2)[0]
+		if service not in Services:
 			continue
 		if service not in updated_service_list:
 			continue
-		if service not in updated_containers:
-			updated_containers[service] = []
-		assert c_name not in updated_containers[service]
-		updated_containers[service].append(c_name)
-		# no need to create record for previously existing container
-		if service in Containers and c_name in Containers[service]:
+		if service not in updated_pods:
+			updated_pods[service] = []
+		assert pod_name not in updated_pods[service]
+		updated_pods[service].append(pod_name)
+		# no need to create record for previously existing pod
+		if service in Pods and pod_name in Pods[service]:
 			continue
 		if service not in ServiceReplicaUpdated:
 			ServiceReplicaUpdated.append(service)
-		assert c_name not in new_cnames
-		new_cnames.append(c_name)
-		logging.info("docker ps container_name = %s, container_id = %s service = %s" %(c_name, c_id, service))
-		create_container_stats(service, c_name, c_id)
+		assert pod_name not in new_pod_names
+		new_pod_names.append(pod_name)
+		logging.info("kubectl get pods name = %s, id = %s service = %s" %(pod_name, pod_id, service))
+		create_pod_stats(service, pod_name, pod_id)
 
-	for service in updated_containers:
-		remove_stale_container(service, updated_containers[service])
-	# get pids in parallel
-	t_list = []
-	for new_container in new_cnames:
-		t = threading.Thread(target=get_container_pids, kwargs={
-			'container_name': new_container,
-			'pid_list': ContainerStats[new_container]['pids']
-		})
-		t_list.append(t)
-		t.start()
-	for t in t_list:
-		t.join()
+	for service in updated_pods:
+		remove_stale_pods(service, updated_pods[service])
 
 def compute_mean(stat_dict):
-	global Containers
+	global Pods
 
 	return_state_dict = {}
-	for service in Containers:
+	for service in Pods:
 		s = 0
-		for c in Containers[service]:
+		for c in Pods[service]:
 			assert c in stat_dict
 			s += stat_dict[c]
-		return_state_dict[service] = float(s)/len(Containers[service])
+		return_state_dict[service] = float(s)/len(Pods[service])
 
 	return return_state_dict
 
 def compute_sum(stat_dict):
-	global Containers
+	global Pods
 
 	return_state_dict = {}
-	for service in Containers:	# only count existing services
+	for service in Pods:	# only count existing services
 		s = 0
-		for c in Containers[service]:
+		for c in Pods[service]:
 			assert c in stat_dict
 			s += stat_dict[c]
 		return_state_dict[service] = s
@@ -251,12 +196,12 @@ def compute_sum(stat_dict):
 	return return_state_dict
 
 def compute_max(stat_dict):
-	global Containers
+	global Pods
 
 	return_state_dict = {}
-	for service in Containers:	# only count existing services
+	for service in Pods:	# only count existing services
 		s = 0
-		for c in Containers[service]:
+		for c in Pods[service]:
 			assert c in stat_dict
 			s = max(s, stat_dict[c])
 		return_state_dict[service] = s
@@ -264,12 +209,12 @@ def compute_max(stat_dict):
 	return return_state_dict
 
 def concatenate(stat_dict):
-	global Containers
+	global Pods
 
 	return_state_dict = {}
-	for service in Containers:	# only count existing services
+	for service in Pods:	# only count existing services
 		return_state_dict[service] = []
-		for c in Containers[service]:
+		for c in Pods[service]:
 			assert c in stat_dict
 			return_state_dict[service].append(stat_dict[c])
 
@@ -277,14 +222,14 @@ def concatenate(stat_dict):
 
 def get_replica():
 	global Services
-	global Containers
+	global Pods
 
 	replica_dict = {}
 	for service in Services:
-		if service not in Containers:
+		if service not in Pods:
 			replica_dict[service] = 0
 		else:
-			replica_dict[service] = len(Containers[service])
+			replica_dict[service] = len(Pods[service])
 	return replica_dict
 
 # Inter-|   Receive                                                |  Transmit
@@ -293,9 +238,9 @@ def get_replica():
 #   eth0: 49916697477 44028473    0    0    0     0          0         0 84480565155 54746827    0    0    0     0       0          0
 
 def get_network_usage():
-	global Containers
-	global ContainerList
-	global ContainerStats
+	global Pods
+	global PodList
+	global PodStats
 
 	rx_packets = {}
 	rx_bytes   = {}
@@ -309,169 +254,141 @@ def get_network_usage():
 
 	while True:
 		fail = False
-		for container in ContainerList:
-			rx_packets[container] = 0
-			rx_bytes[container]   = 0
-			tx_packets[container] = 0
-			tx_bytes[container]   = 0
-
-			for pid in ContainerStats[container]['pids']:
-				# pseudo_file = '/proc/' + str(pid) + '/net/dev'
-				pseudo_file = Path('/proc') / str(pid) / 'net' / 'dev'
-				if not os.path.isfile(str(pseudo_file)):
-					fail = True
-					break
-				with open(str(pseudo_file), 'r') as f:
-					lines = f.readlines()
-					for line in lines:
-						if 'Inter-|   Receive' in line or 'face |bytes    packets errs' in line:
-							continue
-						else:
-							data = line.split(' ')
-							data = [d for d in data if (d != '' and '#' not in d and ":" not in d)]
-							rx_packets[container] += int(data[1])
-							rx_bytes[container]   += int(data[0])
-							tx_packets[container] += int(data[9])
-							tx_bytes[container]   += int(data[8])
+		for pod in PodList:
+			rx_packets[pod] = 0
+			rx_bytes[pod]   = 0
+			tx_packets[pod] = 0
+			tx_bytes[pod]   = 0
 
 			if fail:
 				break
-			ret_rx_packets[container] = rx_packets[container] - ContainerStats[container]['rx_packets']
-			ret_rx_bytes[container]   = rx_bytes[container]	- ContainerStats[container]['rx_bytes']
-			ret_tx_packets[container] = tx_packets[container] - ContainerStats[container]['tx_packets']
-			ret_tx_bytes[container]   = tx_bytes[container]	- ContainerStats[container]['tx_bytes']
+			ret_rx_packets[pod] = rx_packets[pod] - PodStats[pod]['rx_packets']
+			ret_rx_bytes[pod]   = rx_bytes[pod]	- PodStats[pod]['rx_bytes']
+			ret_tx_packets[pod] = tx_packets[pod] - PodStats[pod]['tx_packets']
+			ret_tx_bytes[pod]   = tx_bytes[pod]	- PodStats[pod]['tx_bytes']
 
-			if ret_rx_packets[container] < 0:
-				ret_rx_packets[container] = rx_packets[container]
-			if ret_rx_bytes[container] < 0:
-				ret_rx_bytes[container] = rx_bytes[container]
-			if ret_tx_packets[container] < 0:
-				ret_tx_packets[container] = tx_packets[container]
-			if ret_tx_bytes[container] < 0:
-				ret_tx_bytes[container] = tx_bytes[container]
+			if ret_rx_packets[pod] < 0:
+				ret_rx_packets[pod] = rx_packets[pod]
+			if ret_rx_bytes[pod] < 0:
+				ret_rx_bytes[pod] = rx_bytes[pod]
+			if ret_tx_packets[pod] < 0:
+				ret_tx_packets[pod] = tx_packets[pod]
+			if ret_tx_bytes[pod] < 0:
+				ret_tx_bytes[pod] = tx_bytes[pod]
 
-			ContainerStats[container]['rx_packets'] = rx_packets[container]
-			ContainerStats[container]['rx_bytes']   = rx_bytes[container]
-			ContainerStats[container]['tx_packets'] = tx_packets[container]
-			ContainerStats[container]['tx_bytes']   = tx_bytes[container]
+			PodStats[pod]['rx_packets'] = rx_packets[pod]
+			PodStats[pod]['rx_bytes']   = rx_bytes[pod]
+			PodStats[pod]['tx_packets'] = tx_packets[pod]
+			PodStats[pod]['tx_bytes']   = tx_bytes[pod]
 
 		if not fail:
 			break
 
 		else:
-			reset_container_id_pids()
+			reset_pod_ids()
 
 	# return compute_mean(ret_rx_packets), compute_mean(ret_rx_bytes), compute_mean(ret_tx_packets), compute_mean(ret_tx_bytes)
 	# return compute_sum(ret_rx_packets), compute_sum(ret_rx_bytes), compute_sum(ret_tx_packets), compute_sum(ret_tx_bytes) 
 	return concatenate(ret_rx_packets), concatenate(ret_rx_bytes), concatenate(ret_tx_packets), concatenate(ret_tx_bytes)
 
 def get_memory_usage():
-	global Containers
-	global ContainerList
-	global ContainerStats
+	global Pods
+	global PodList
+	global PodStats
 
 	rss = {}	# resident set size, memory belonging to process, including heap & stack ...
 	cache_memory = {}	# data stored on disk (like files) currently cached in memory
 	page_faults  = {}
 
-	for container in ContainerList:
-		# pseudo_file = '/sys/fs/cgroup/memory/docker/' + str(ContainerIds[tier]) + '/memory.stat'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'memory' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'memory.stat'
+	for pod in PodList:
+		pseudo_file = k8s_util.stat_path('memory.stat', PodStats[pod]["id"])
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			for line in lines:
 				if 'total_cache' in line:
-					cache_memory[container] = round(int(line.split(' ')[1])/(1024.0**2), 3)	# turn byte to mb
+					cache_memory[pod] = round(int(line.split(' ')[1])/(1024.0**2), 3)	# turn byte to mb
 				elif 'total_rss' in line and 'total_rss_huge' not in line:
-					rss[container] = round(int(line.split(' ')[1])/(1024.0**2), 3)
+					rss[pod] = round(int(line.split(' ')[1])/(1024.0**2), 3)
 				elif 'total_pgfault' in line:
 					pf = int(line.split(' ')[1])
-					page_faults[container] = pf - ContainerStats[container]['page_faults']
-					if page_faults[container] < 0:
-						page_faults[container] = pf
-					ContainerStats[container]['page_faults'] = pf
+					page_faults[pod] = pf - PodStats[pod]['page_faults']
+					if page_faults[pod] < 0:
+						page_faults[pod] = pf
+					PodStats[pod]['page_faults'] = pf
 
-		assert rss[container] >= 0
-		assert cache_memory[container] >= 0
-		assert page_faults[container] >= 0
+		assert rss[pod] >= 0
+		assert cache_memory[pod] >= 0
+		assert page_faults[pod] >= 0
 
 	# return compute_mean(rss), compute_mean(cache_memory), compute_mean(page_faults)
 	# return compute_sum(rss), compute_sum(cache_memory), compute_sum(page_faults)
 	return concatenate(rss), concatenate(cache_memory), concatenate(page_faults)
 
-# cpu time percentages used on behalf on the container
+# cpu time percentages used on behalf on the pod
 # mpstat gets information of total cpu usage including colated workloads
 def get_docker_cpu_usage():
-	global Containers
-	global ContainerList
-	global ContainerStats
+	global Pods
+	global PodList
+	global PodStats
 
 	docker_cpu_time = {}
 	while True:
 		fail = False
-		for container in ContainerList:
-			# pseudo_file = '/sys/fs/cgroup/cpuacct/docker/' + ContainerStats[container]['id'] + '/cpuacct.usage'
-			pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'cpuacct' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'cpuacct.usage'
-			if not os.path.isfile(str(pseudo_file)):
+		for pod in PodList:
+			pseudo_file = k8s_util.stat_path('cpuacct.usage', PodStats[pod]["id"])
+			if not pseudo_file.is_file():
 				fail = True
 				break
 			with open(str(pseudo_file), 'r') as f:
 				cum_cpu_time = int(f.readlines()[0])/1000000.0	# turn ns to ms
-				docker_cpu_time[container] = max(cum_cpu_time - ContainerStats[container]['cpu_time'], 0)
-				# logging.info(container + ' docker cummulative cpu time: ' + \
-				# 	format(cum_cpu_time, '.1f') + ' interval cpu time: ' + \
-				# 	format(docker_cpu_time[container], '.1f'))
-				ContainerStats[container]['cpu_time'] = cum_cpu_time
+			docker_cpu_time[pod] = max(cum_cpu_time - PodStats[pod]['cpu_time'], 0)
+			PodStats[pod]['cpu_time'] = cum_cpu_time
 
 		if not fail:
 			break
 		else:
-			reset_container_id_pids()
+			reset_pod_ids()
 
-	# return compute_mean(docker_cpu_time)
-	# return compute_sum(docker_cpu_time) 
 	return concatenate(docker_cpu_time)
 
 def get_io_usage():
-	global Containers
-	global ContainerList
-	global ContainerStats
+	global Pods
+	global PodList
+	global PodStats
 
 	ret_io_bytes	= {}
 	ret_io_serviced = {}
 
-	for container in ContainerList:	
+	for pod in PodList:	
 		# io sectors (512 bytes)
-		# pseudo_file = '/sys/fs/cgroup/blkio/docker/' + str(ContainerIds[container])  + '/blkio.sectors_recursive'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'blkio.throttle.io_service_bytes_recursive'
+		pseudo_file = k8s_util.stat_path('blkio.throttle.io_service_bytes_recursive', PodStats[pod]["id"])
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			if len(lines) > 0:
 				sector_num = int(lines[0].split(' ')[-1])
-				ret_io_bytes[container] = sector_num - ContainerStats[container]['io_bytes']
-				if ret_io_bytes[container] < 0:
-					ret_io_bytes[container] = sector_num
+				ret_io_bytes[pod] = sector_num - PodStats[pod]['io_bytes']
+				if ret_io_bytes[pod] < 0:
+					ret_io_bytes[pod] = sector_num
 			else:
 				sector_num = 0
-				ret_io_bytes[container] = 0
+				ret_io_bytes[pod] = 0
 
-			ContainerStats[container]['io_bytes'] = sector_num
+			PodStats[pod]['io_bytes'] = sector_num
 
 		# io services
-		# pseudo_file = '/sys/fs/cgroup/blkio/docker/' + str(ContainerIds[container])  + '/blkio.io_serviced_recursive'
-		pseudo_file = Path('/sys') / 'fs' / 'cgroup' / 'blkio' / 'system.slice' / f'docker-{ContainerStats[container]["id"]}.scope' / 'blkio.throttle.io_serviced_recursive'
+		pseudo_file = k8s_util.stat_path('blkio.throttle.io_serviced_recursive', PodStats[pod]["id"])
 		with open(str(pseudo_file), 'r') as f:
 			lines = f.readlines()
 			for line in lines:
 				if 'Total' in line:
 					serv_num = int(line.split(' ')[-1])
-					ret_io_serviced[container] = serv_num - ContainerStats[container]['io_serviced']
-					if ret_io_serviced[container] < 0:
-						ret_io_serviced[container] = serv_num
-					ContainerStats[container]['io_serviced'] = serv_num
+					ret_io_serviced[pod] = serv_num - PodStats[pod]['io_serviced']
+					if ret_io_serviced[pod] < 0:
+						ret_io_serviced[pod] = serv_num
+					PodStats[pod]['io_serviced'] = serv_num
 
-		assert container in ret_io_bytes
-		assert container in ret_io_serviced
+		assert pod in ret_io_bytes
+		assert pod in ret_io_serviced
 
 	# return compute_mean(ret_io_bytes), compute_mean(ret_io_serviced), compute_mean(ret_io_wait)
 	# return compute_sum(ret_io_bytes), compute_sum(ret_io_serviced), compute_sum(ret_io_wait)
@@ -483,8 +400,8 @@ def get_io_usage():
 def init_data():
 	global Services
 	global ServiceConfig
-	# reset container id pid every time, since we can't control placement with docker swarm
-	reset_container_id_pids()
+	# reset pod id every time, since we can't control placement with k8s
+	reset_pod_ids()
 
 	# read initial values
 	get_docker_cpu_usage()
@@ -496,7 +413,7 @@ def init_data():
 def set_cpu_limit(cpu_config, quiet=False):
 	global Services
 	global ServiceConfig
-	global Containers
+	global Pods
 	global Cpus
 	global ServiceReplicaUpdated
 
@@ -506,31 +423,24 @@ def set_cpu_limit(cpu_config, quiet=False):
 		_stdout = subprocess.DEVNULL
 		_stderr = subprocess.DEVNULL
 
-	p_list = []
 	for service in Services:
 		assert service in cpu_config
 		assert 'cpus' in cpu_config[service]
 		if ServiceConfig[service]['cpus'] == cpu_config[service]['cpus'] and \
 			service not in ServiceReplicaUpdated:
 			continue
-		if service not in Containers:
+		if service not in Pods:
 			continue
 
 		if cpu_config[service]['cpus'] == 0:
-			per_container_cpu = Cpus
+			per_pod_cpu = Cpus
 		else:
 			assert cpu_config[service]['cpus'] <= Cpus
-			# per_container_cpu = float(cpu_config[service]['cpus'])/len(Containers[service])
-			per_container_cpu = float(cpu_config[service]['cpus'])	# cpus field here directly refers to per container cpu
+			per_pod_cpu = float(cpu_config[service]['cpus'])	# cpus field here directly refers to per pod cpu
 		ServiceConfig[service]['cpus'] = cpu_config[service]['cpus']	
 	
-		for container in Containers[service]:
-			cmd = 'docker update --cpus=%s %s' %(format(per_container_cpu, '.4f'), container)
-			# logging.info(cmd)
-			p = subprocess.Popen(cmd, shell=True, stdout=_stdout, stderr=_stderr)
-			p_list.append(p)
-	for p in p_list:
-		p.communicate()
+		for pod in Pods[service]:
+			k8s_util.set_cpu_limit(PodStats[pod]['id'], per_pod_cpu)
 
 	ServiceReplicaUpdated = []	# clear replica update history
 
@@ -586,7 +496,7 @@ def start_experiment(host_sock):
 
 				ret_info = {}
 				elapsed_time = (cur_time - prev_host_query_time)*1000	# in ms
-				for service in Containers:
+				for service in Pods:
 					ret_info[service] = {}
 					ret_info[service]['replica']	 = replica_dict[service]
 					# turn to virtual cpu number

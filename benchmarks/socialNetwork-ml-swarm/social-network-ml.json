@@ -1,0 +1,2296 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "social-network-ml",
+        "labels": {
+          "deathStarProject": "social-network"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "jaeger",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "jaeger"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "jaeger"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "jaeger",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "jaeger"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "jaeger",
+                "image": "jaegertracing/all-in-one:latest",
+                "env": [
+                  {
+                    "name": "COLLECTOR_ZIPKIN_HTTP_PORT",
+                    "value": "9411"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "jaeger",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "jaeger"
+        }
+      },
+      "spec": {
+        "type": "NodePort",
+        "ports": [
+          {
+            "name": "16686",
+            "port": 16686,
+            "nodePort": 30005
+          },
+          {
+            "name": "9411",
+            "port": 9411
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "jaeger"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "nginx-thrift",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "nginx-thrift"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "nginx-thrift"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "nginx-thrift",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "nginx-thrift"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "nginx-thrift",
+                "image": "yg397/openresty-thrift:xenial",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/usr/local/openresty/nginx/lua-scripts",
+                    "name": "lua-scripts"
+                  },
+                  {
+                    "mountPath": "/usr/local/openresty/nginx/pages",
+                    "name": "pages"
+                  },
+                  {
+                    "mountPath": "/usr/local/openresty/nginx/conf/nginx.conf",
+                    "name": "nginx-conf"
+                  },
+                  {
+                    "mountPath": "/usr/local/openresty/nginx/jaeger-config.json",
+                    "name": "jaeger-config-json"
+                  },
+                  {
+                    "mountPath": "/gen-lua",
+                    "name": "gen-lua"
+                  }
+                ]
+              },
+              {
+                "name": "dnsmasq",
+                "image": "janeczku/go-dnsmasq:release-1.0.7@sha256:3a99ad92353b55e97863812470e4f7403b47180f06845fdd06060773fe04184f",
+                "args": [
+                  "--listen",
+                  "127.0.0.1:53",
+                  "--default-resolver",
+                  "--append-search-domains"
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "lua-scripts",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./nginx-web-server/lua-scripts",
+                  "type": "Directory"
+                }
+              },
+              {
+                "name": "pages",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./nginx-web-server/pages",
+                  "type": "Directory"
+                }
+              },
+              {
+                "name": "nginx-conf",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./nginx-web-server/conf/nginx-k8s.conf",
+                  "type": "File"
+                }
+              },
+              {
+                "name": "jaeger-config-json",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./nginx-web-server/jaeger-config.json",
+                  "type": "File"
+                }
+              },
+              {
+                "name": "gen-lua",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./gen-lua",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "nginx-thrift",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "nginx-thrift"
+        }
+      },
+      "spec": {
+        "type": "NodePort",
+        "ports": [
+          {
+            "port": 8080,
+            "nodePort": 30001
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "nginx-thrift"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "compose-post-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "compose-post-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "compose-post-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "compose-post-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "compose-post-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "ComposePostService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "compose-post-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "compose-post-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-redis"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "compose-post-redis"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "compose-post-redis",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "compose-post-redis"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "compose-post-redis",
+                "image": "redis",
+                "command": [
+                  "sh",
+                  "-c",
+                  "rm -f /data/dump.rdb && redis-server --save \"\" --appendonly no"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "compose-post-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-redis"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 6379
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "compose-post-redis"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "home-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "home-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "home-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "home-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "HomeTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "home-timeline-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-redis"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "home-timeline-redis"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "home-timeline-redis",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "home-timeline-redis"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "home-timeline-redis",
+                "image": "redis",
+                "command": [
+                  "sh",
+                  "-c",
+                  "rm -f /data/dump.rdb && redis-server --save \"\" --appendonly no"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "home-timeline-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-redis"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 6379
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "home-timeline-redis"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "media-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "media-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "media-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "media-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "media-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "media-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "MediaService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "media-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "media-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "media-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "post-storage-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "post-storage-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "post-storage-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "post-storage-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "PostStorageService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-memcached",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-memcached"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "post-storage-memcached"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "post-storage-memcached",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "post-storage-memcached"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "post-storage-memcached",
+                "image": "memcached:1.6.0",
+                "env": [
+                  {
+                    "name": "MEMCACHED_CACHE_SIZE",
+                    "value": "4096"
+                  },
+                  {
+                    "name": "MEMCACHED_THREADS",
+                    "value": "8"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-memcached",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-memcached"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 11211
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-memcached"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-mongodb"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "post-storage-mongodb"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "post-storage-mongodb",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "post-storage-mongodb"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "post-storage-mongodb",
+                "image": "mongo",
+                "args": [
+                  "--nojournal",
+                  "--quiet"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "post-storage-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-mongodb"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 27017
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "post-storage-mongodb"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "social-graph-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "social-graph-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "social-graph-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "social-graph-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "SocialGraphService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-mongodb"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "social-graph-mongodb"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "social-graph-mongodb",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "social-graph-mongodb"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "social-graph-mongodb",
+                "image": "mongo",
+                "args": [
+                  "--nojournal",
+                  "--quiet"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-mongodb"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 27017
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-mongodb"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-redis"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "social-graph-redis"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "social-graph-redis",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "social-graph-redis"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "social-graph-redis",
+                "image": "redis",
+                "command": [
+                  "sh",
+                  "-c",
+                  "rm -f /data/dump.rdb && redis-server --save \"\" --appendonly no"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "social-graph-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-redis"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 6379
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "social-graph-redis"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "text-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "text-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "text-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "text-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "text-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "text-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "TextService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "text-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "text-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "text-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "unique-id-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "unique-id-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "unique-id-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "unique-id-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "unique-id-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "unique-id-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "UniqueIdService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "unique-id-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "unique-id-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "unique-id-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "url-shorten-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "url-shorten-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "url-shorten-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "url-shorten-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "url-shorten-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "url-shorten-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "UrlShortenService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "url-shorten-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "url-shorten-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "url-shorten-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-mention-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-mention-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-mention-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-mention-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-mention-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-mention-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "UserMentionService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-mention-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-mention-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-mention-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "UserService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-memcached",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-memcached"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-memcached"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-memcached",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-memcached"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-memcached",
+                "image": "memcached:1.6.0",
+                "env": [
+                  {
+                    "name": "MEMCACHED_CACHE_SIZE",
+                    "value": "4096"
+                  },
+                  {
+                    "name": "MEMCACHED_THREADS",
+                    "value": "8"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-memcached",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-memcached"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 11211
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-memcached"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-mongodb"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-mongodb"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-mongodb",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-mongodb"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-mongodb",
+                "image": "mongo",
+                "args": [
+                  "--nojournal",
+                  "--quiet"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-mongodb"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 27017
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-mongodb"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "UserTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-mongodb"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-timeline-mongodb"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-timeline-mongodb",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-timeline-mongodb"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-timeline-mongodb",
+                "image": "mongo",
+                "args": [
+                  "--nojournal",
+                  "--quiet"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-mongodb",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-mongodb"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 27017
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-mongodb"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-redis"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "user-timeline-redis"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "user-timeline-redis",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "user-timeline-redis"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "user-timeline-redis",
+                "image": "redis",
+                "command": [
+                  "sh",
+                  "-c",
+                  "rm -f /data/dump.rdb && redis-server --save \"\" --appendonly no"
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "user-timeline-redis",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-redis"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 6379
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "user-timeline-redis"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-home-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-home-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-home-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "write-home-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "WriteHomeTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-rabbitmq",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-rabbitmq"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-home-timeline-rabbitmq"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-home-timeline-rabbitmq",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-home-timeline-rabbitmq"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "write-home-timeline-rabbitmq",
+                "image": "rabbitmq",
+                "env": [
+                  {
+                    "name": "RABBITMQ_ERLANG_COOKIE",
+                    "value": "WRITE-HOME-TIMELINE-RABBITMQ"
+                  },
+                  {
+                    "name": "RABBITMQ_DEFAULT_VHOST",
+                    "value": "/"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-rabbitmq",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-rabbitmq"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 5672
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-rabbitmq"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-user-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-user-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-user-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "write-user-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "WriteUserTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-rabbitmq",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-rabbitmq"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-user-timeline-rabbitmq"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-user-timeline-rabbitmq",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-user-timeline-rabbitmq"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "write-user-timeline-rabbitmq",
+                "image": "rabbitmq",
+                "env": [
+                  {
+                    "name": "RABBITMQ_ERLANG_COOKIE",
+                    "value": "WRITE-USER-TIMELINE-RABBITMQ"
+                  },
+                  {
+                    "name": "RABBITMQ_DEFAULT_VHOST",
+                    "value": "/"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-rabbitmq",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-rabbitmq"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 5672
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-rabbitmq"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "media-filter-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "media-filter-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "media-filter-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "media-filter-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "media-filter-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "media-filter-service",
+                "image": "yz2297/social-network-media-filter",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config-py",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "media-filter-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "media-filter-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 40000
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "media-filter-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "text-filter-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "text-filter-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "text-filter-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "text-filter-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "text-filter-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-12",
+            "containers": [
+              {
+                "name": "text-filter-service",
+                "image": "yz2297/social-network-text-filter",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config-py",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "text-filter-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "text-filter-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 40000
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "text-filter-service"
+        }
+      }
+    }
+  ]
+}

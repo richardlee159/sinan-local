@@ -1,7 +1,7 @@
 cd ../
 python3 master_deploy_ath_social.py --user-name pingheli \
-	--stack-name sinan-socialnet \
-	--compose-file docker-compose-swarm-single-node.yml \
+	--namespace social-network-ml \
+	--compose-file social-network-ml.json \
 	--locust-script /mnt/locust/socialml_rps_1.py \
 	--min-users 50 --max-users 450 --users-step 50 \
 	--exp-time 300 --measure-interval 1 --slave-port 40011 \

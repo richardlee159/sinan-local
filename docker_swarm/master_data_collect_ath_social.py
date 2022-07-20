@@ -19,6 +19,7 @@ from util import *
 from locust_util import *
 from master_slave_msg import *
 from docker_swarm_util import *
+from k8s_util import *
 
 DockerMetrics = [
 		'cpu_usage', # cpu cpu usage from docker, in terms of virtual cpu
@@ -49,9 +50,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--user-name', dest='user_name', type=str, default='yz2297')
 parser.add_argument('--setup-swarm', dest='setup_swarm', action='store_true')
 parser.add_argument('--deploy', dest='deploy', action='store_true')
-parser.add_argument('--stack-name', dest='stack_name', type=str, required=True)
 parser.add_argument('--benchmark', dest='benchmark', type=str, default='socialNetwork-ml-swarm')
-parser.add_argument('--compose-file', dest='compose_file', type=str, default='docker-compose-swarm.yml')
+parser.add_argument('--compose-file', dest='compose_file', type=str, default='social-network-ml.json')
+parser.add_argument('--namespace', dest='namespace', type=str, default='social-network-ml')
+parser.add_argument('--pod-count', dest='pod_count', type=int, default=29)
 parser.add_argument('--min-users', dest='min_users', type=int, required=True)
 parser.add_argument('--max-users', dest='max_users', type=int, required=True)
 parser.add_argument('--users-step', dest='users_step', type=int, required=True)
@@ -99,10 +101,11 @@ args = parser.parse_args()
 Username = args.user_name
 Deploy = args.deploy
 SetupSwarm = args.setup_swarm
-Stackname = args.stack_name
 Benchmark = args.benchmark
 BenchmarkDir =  Path.cwd() / '..' / 'benchmarks' / args.benchmark
 ComposeFile = BenchmarkDir / args.compose_file
+Namespace = args.namespace
+PodCount = args.pod_count
 MinUsers = args.min_users
 MaxUsers = args.max_users
 UsersStep = args.users_step
@@ -790,48 +793,16 @@ def propose_replica():
 			replica_proposal[service] = next_r
 	return replica_proposal
 
-def do_service_docker_scale(stack_name, service, next_r, replica_state):
-	replica_state.set_in_transit(next_r)
-	docker_service_scale(stack_name=stack_name, 
-		service=service, replica=next_r)
-	replica_state.update(next_r)
-
-def do_docker_scale(replica_proposal):
-	global ServiceReplicaStates
-	global Stackname
-
-	assert len(replica_proposal) != 0
-	for service in replica_proposal:
-		t = threading.Thread(target=do_service_docker_scale, kwargs={
-			'stack_name': Stackname,
-			'service': service,
-			'next_r': replica_proposal[service],
-			'replica_state': ServiceReplicaStates[service]
-		})
-		ServiceReplicaStates[service].set_thread(t)
-		t.start()
-
 def do_docker_scale_init():
 	global ServiceInitConfig
 	global ServiceReplicaStates
-	global Stackname
 
 	time.sleep(15)
 
 	for service in ServiceInitConfig:
 		if service == 'jaeger' or service == 'zipkin':
 			continue
-		actual, desired = docker_check_replica(stack_name=Stackname,
-			service=service)
 		ServiceReplicaStates[service].reset()
-		init_r = ServiceInitConfig[service]['replica']
-		if actual != desired or actual != init_r:
-			logging.warning('Service %s replica actual=%d, desired=%d, required_init=%d' %(service,
-				actual, desired, init_r))
-		if init_r != actual or init_r != desired:
-			do_service_docker_scale(
-				stack_name=Stackname, service=service, next_r=init_r, 
-				replica_state=ServiceReplicaStates[service])
 
 def reset_docker_scale_clock():
 	global ScaleIneratia
@@ -1114,7 +1085,7 @@ def run_exp(users, log_dir):
 				if trigger_docker_scale():
 					new_replica = propose_replica()
 					if len(new_replica) != 0:
-						do_docker_scale(new_replica)
+						raise NotImplementedError
 						reset_docker_scale_clock()
 
 				action = None
@@ -1198,26 +1169,16 @@ def main():
 
 	global BenchmarkDir
 	global Benchmark
-	global Stackname
 	global ComposeFile
 
-	global Stackname
 	global Username
 
 	if SetupSwarm:
-		# establish docker swarm
-		worker_nodes = list(Servers.keys())
-		worker_nodes.remove(HostServer)
-		assert HostServer not in worker_nodes
-		setup_swarm(username=Username, worker_nodes=worker_nodes)
-		# label nodes
-		for server in Servers:
-			if 'label' in Servers[server]:
-				update_node_label(server, Servers[server]['label'])
+		raise NotImplementedError
 		
 	slave_service_config = {}
 	slave_service_config['services'] = list(Services)
-	slaves = setup_slaves(stack_name=Stackname, username=Username, 
+	slaves = setup_slaves(namespace=Namespace, username=Username, 
 		servers=Servers, 
 		slave_port=SlavePort, slave_script_dir=Path.cwd(), 
 		service_config=slave_service_config)
@@ -1232,9 +1193,8 @@ def main():
 		if Deploy:
 			converged = False
 			while not converged:
-				docker_stack_rm(stack_name=Stackname)
-				converged = docker_stack_deploy(stack_name=Stackname, benchmark=Benchmark,
-					benchmark_dir=BenchmarkDir, compose_file=ComposeFile)	# deploy benchmark
+				converged = k8s_deploy(benchmark_dir=BenchmarkDir, compose_file=ComposeFile,
+							namespace=Namespace, pod_count=PodCount)	# deploy benchmark
 		users_dir = DataDir / ('users_' + str(users))
 		service_fail = run_exp(users=users, log_dir=users_dir)
 		if not service_fail:

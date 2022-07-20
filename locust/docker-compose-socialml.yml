@@ -12,7 +12,7 @@ services:
       - $HOME/sinan_locust_log:/mnt/locust_log
       - ./base64_images:/mnt/social_images
     command: -f /mnt/locust/socialml_rps_1.py -r 10 --csv=/mnt/locust_log/social --headless
-             --host http://127.0.0.1:8080 --users ${USERS} -t ${EXP_TIME} --logfile /mnt/locust_log/social_locust_log.txt
+             --host http://127.0.0.1:30001 --users ${USERS} -t ${EXP_TIME} --logfile /mnt/locust_log/social_locust_log.txt
              --master --expect-workers ${WORKERS}
   
   worker:

@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path.cwd()))
 from util import *
 
-def setup_server_slave(stack_name, username, server, server_cpus, slave_port, 
+def setup_server_slave(namespace, username, server, server_cpus, slave_port, 
 		slave_script_dir, service_config_path, quiet):
 	cwd = str(Path.cwd())
 
@@ -18,10 +18,10 @@ def setup_server_slave(stack_name, username, server, server_cpus, slave_port,
 		identity_file='')
 
 	slave_cmd = 'cd ' + cwd + ';'
-	if stack_name == '':
-		stack_name = '\'\''
-	slave_cmd += 'python3 ' + str(slave_script_dir / 'slave_data_collect_ath_social.py') + \
-				' --stack-name ' + str(stack_name) + \
+	if namespace == '':
+		namespace = '\'\''
+	slave_cmd += 'sudo python3 ' + str(slave_script_dir / 'slave_data_collect_ath_social.py') + \
+				' --namespace ' + str(namespace) + \
 				' --cpus ' + str(server_cpus) + \
 				' --server-port ' + str(slave_port) + \
 				' --service-config ' + str(service_config_path)
@@ -33,7 +33,7 @@ def setup_server_slave(stack_name, username, server, server_cpus, slave_port,
 
 	# subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def setup_slaves(stack_name, username, servers, 
+def setup_slaves(namespace, username, servers, 
 		slave_port, slave_script_dir, service_config, quiet=False):
 	config_path = Path.cwd() / 'config' / 'slave_config.json'
 	with open(str(config_path), 'w+') as f:
@@ -44,7 +44,7 @@ def setup_slaves(stack_name, username, servers,
 		# ip_addr = servers[server]['ip_addr']
 		server_cpus = servers[server]['cpus']
 		p = setup_server_slave(
-			stack_name=stack_name,
+			namespace=namespace,
 			username=username, 
 			server=server,
 			server_cpus=server_cpus,
