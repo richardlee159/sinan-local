@@ -347,6 +347,14 @@ def main():
         os.mkdir('./xgb_model/')
     bst.save_model('./xgb_model/hotel_nn_sys_state_look_forward_' + str(look_forward) + '.model')
 
+    ypred0 = ypred[y_test == 0]
+    ypred1 = ypred[y_test == 1]
+    plt.hist([ypred0, ypred1], label=['y_true=0', 'y_true=1'], density=True, stacked=True, range=[0, 1], bins=50)
+    plt.xlabel('y_pred (prob. QoS violation)')
+    plt.ylabel('Probability Density')
+    plt.legend()
+    plt.savefig("pdf.png")
+
 # print list(ypred)
 '''
 counter = 0
