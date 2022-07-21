@@ -90,7 +90,7 @@ def main():
 	else:
 		for dir_n in os.listdir(top_dir_name):
 			if 'users' in dir_n:
-				user = int(dir_n.split('users_')[-1])
+				user = dir_n.split('users_')[-1]
 			else:
 				continue
 			full_path = top_dir_name + '/' + dir_n + '/'
@@ -98,7 +98,7 @@ def main():
 
 	print('user\tviol_rate\tlat_mean\tlat_max\tlat_min\tlat_std\tcpu_mean\tcpu_max')
 	for u in sorted(list(stats.keys())):
-		print('%d\t%.3f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f' %(u ,
+		print('%s\t%.3f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f' %(u ,
 			stats[u]['viol_rate'],
 			stats[u]['lat_mean'],
 			stats[u]['lat_max'],
