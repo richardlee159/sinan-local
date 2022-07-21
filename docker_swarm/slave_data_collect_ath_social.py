@@ -105,6 +105,7 @@ def kubectl_get_pods():
 	global Namespace
 
 	p = subprocess.run(['kubectl', 'get', 'pods', f'-n={Namespace}',
+		f'--field-selector=spec.nodeName={socket.gethostname()}',
 		r'-o=jsonpath={range .items[*]}{.metadata.uid} {.metadata.name}{"\n"}{end}'],
 		stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, text=True, check=True)
 	for i in p.stdout.splitlines():
@@ -143,6 +144,7 @@ def update_replica(updated_service_list):
 	new_pod_names = []
 	updated_pods = {}	# indexed by service
 	p = subprocess.run(['kubectl', 'get', 'pods', f'-n={Namespace}',
+		f'--field-selector=spec.nodeName={socket.gethostname()}',
 		r'-o=jsonpath={range .items[*]}{.metadata.uid} {.metadata.name}{"\n"}{end}'],
 		stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, text=True, check=True)
 	for i in p.stdout.splitlines():

@@ -29,8 +29,8 @@ gpu_config_path = Path('..') / 'config' / args.gpu_config.strip()
 
 gpu_config = {}
 gpu_config['gpus'] = []
-gpu_config['ip_addr'] = '10.1.0.4'
-gpu_config['host'] = 'autosys-12'
+gpu_config['ip_addr'] = '172.22.0.20'
+gpu_config['host'] = 'autosys-f16'
 gpu_config['working_dir'] = '/home/pingheli/sinan-local/ml_docker_swarm'
 gpu_config['script'] = 'hotel_reserve_predictor.py'
 

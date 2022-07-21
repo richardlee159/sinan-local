@@ -38,7 +38,10 @@ replica_cpus = args.replica_cpus
 # cpu_percent = args.cpu_percent
 
 IP_ADDR = {}
-IP_ADDR["autosys-12"]     = "10.1.0.4"
+IP_ADDR["autosys-f12"]     = "172.22.0.14"
+IP_ADDR["autosys-f13"]     = "172.22.0.15"
+IP_ADDR["autosys-f14"]     = "172.22.0.16"
+IP_ADDR["autosys-f15"]     = "172.22.0.17"
 
 service_config = {
     "frontend":          {'max_replica': 1, 'max_cpus': 12},
@@ -79,7 +82,7 @@ for node in nodes:
     assert node in IP_ADDR
     node_config[node] = {}
     node_config[node]['ip_addr'] = IP_ADDR[node]
-    if node == 'autosys-12':
+    if node == 'autosys-f12':
         node_config[node]['cpus'] = 32
         node_config[node]['label'] = 'type=compute'
     else:
