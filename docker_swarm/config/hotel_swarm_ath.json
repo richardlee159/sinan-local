@@ -1,14 +1,9 @@
 {
     "nodes": {
-        "ath-8": {
-            "cpus": 88,
-            "ip_addr": "ath-8-ip",
+        "autosys-12": {
+            "cpus": 32,
+            "ip_addr": "10.1.0.4",
             "label": "type=compute"
-        },
-        "ath-9": {
-            "cpus": 88,
-            "ip_addr": "ath-9-ip",
-            "label": "type=data"
         }
     },
     "replica_cpus": 4,
@@ -18,104 +13,104 @@
     ],
     "service": {
         "frontend": {
-            "cpus": 48,
-            "max_cpus": 48,
+            "cpus": 12,
+            "max_cpus": 12,
             "max_replica": 1,
             "replica": 1
         },
         "geo": {
-            "cpus": 16,
-            "max_cpus": 16,
+            "cpus": 4,
+            "max_cpus": 4,
             "max_replica": 1,
             "replica": 1
         },
         "memcached-profile": {
-            "cpus": 8,
-            "max_cpus": 8,
+            "cpus": 4,
+            "max_cpus": 4,
             "max_replica": 1,
             "replica": 1
         },
         "memcached-rate": {
-            "cpus": 8,
-            "max_cpus": 8,
+            "cpus": 4,
+            "max_cpus": 4,
             "max_replica": 1,
             "replica": 1
         },
         "memcached-reserve": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-geo": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-profile": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-rate": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-recommendation": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-reservation": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "mongodb-user": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "profile": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "rate": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "recommendation": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "reservation": {
+            "cpus": 4,
+            "max_cpus": 4,
+            "max_replica": 1,
+            "replica": 1
+        },
+        "search": {
             "cpus": 8,
             "max_cpus": 8,
             "max_replica": 1,
             "replica": 1
         },
-        "mongodb-geo": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "mongodb-profile": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "mongodb-rate": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "mongodb-recommendation": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "mongodb-reservation": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "mongodb-user": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "profile": {
-            "cpus": 16,
-            "max_cpus": 16,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "rate": {
-            "cpus": 16,
-            "max_cpus": 16,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "recommendation": {
-            "cpus": 16,
-            "max_cpus": 16,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "reservation": {
-            "cpus": 16,
-            "max_cpus": 16,
-            "max_replica": 1,
-            "replica": 1
-        },
-        "search": {
-            "cpus": 32,
-            "max_cpus": 32,
-            "max_replica": 1,
-            "replica": 1
-        },
         "user": {
-            "cpus": 16,
-            "max_cpus": 16,
+            "cpus": 4,
+            "max_cpus": 4,
             "max_replica": 1,
             "replica": 1
         }

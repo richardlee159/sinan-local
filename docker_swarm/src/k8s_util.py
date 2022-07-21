@@ -75,5 +75,12 @@ def k8s_deploy(benchmark_dir, compose_file, namespace, pod_count):
         # print 'setup_social_graph_init_data.py out: ', out
         logging.info('social network set up done')
         time.sleep(30)
+    elif 'hotel' in namespace:
+        from locust_util import run_locust
+        LocustScript = Path.cwd()/'../locust/src/hotel_rps_1.py'
+        run_locust(
+            client_script=LocustScript, nginx_ip='http://127.0.0.1:30001', 
+            duration=60, users=200, quiet=True)
+        time.sleep(30)
     
     return True

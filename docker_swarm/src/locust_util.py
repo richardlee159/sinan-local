@@ -17,10 +17,9 @@ def run_locust_docker_compose(docker_compose_file,
 
 	locust_proc = None
 	if workers == 0:
-		workers = max(1, users // 2)
+		workers = max(1, users // 500)
 	# env variables
 	cmd = 'USERS=' + str(users) + ' EXP_TIME=' + str(duration) + 's '
-	cmd += 'WORKERS=' + str(workers) + ' '
 	cmd += 'docker-compose -f ' + str(docker_compose_file) + \
 		' up --scale worker=' + str(workers)
 	print(cmd)
@@ -30,9 +29,8 @@ def run_locust_docker_compose(docker_compose_file,
 	assert locust_proc != None
 	return locust_proc
 
-def run_locust(client_script, csv, nginx_ip, volumes,
-		log_file, duration=10,
-		users=10, quiet=False):
+def run_locust(client_script, nginx_ip, duration, users,
+		csv=None, log_file=None, volumes=[], quiet=False):
 	# _stdout = subprocess.PIPE
 	_stdout = sys.stdout
 	_stderr = sys.stderr
@@ -48,14 +46,17 @@ def run_locust(client_script, csv, nginx_ip, volumes,
 			src = vol[0]
 			targ = vol[1]
 			cmd += src + ':' + targ + ' '
-	cmd += 'yz2297/locust_openwhisk '	# locust docker image
-	cmd += '-f ' + client_script + ' '
-	cmd += '-r ' + str(10) + ' '
-	cmd += '--csv ' + csv + ' '
-	cmd += '--headless -t ' + str(duration) + 's '
-	cmd += '--host ' + nginx_ip + ' '
-	cmd += '--users ' + str(users) + ' '
-	cmd += '--logfile ' + log_file
+	cmd += 'locustio/locust '	# locust docker image
+	cmd += '--headless '
+	cmd += '-f ' + str(client_script) + ' '
+	cmd += '-H ' + nginx_ip + ' '
+	cmd += '-t ' + str(duration) + 's '
+	cmd += '-u ' + str(users) + ' '
+	cmd += '-r ' + str(100) + ' '
+	if csv:
+		cmd += '--csv ' + csv + ' '
+	if log_file:
+		cmd += '--logfile ' + log_file + ' '
 	print(cmd)
 	locust_proc = subprocess.Popen(cmd, shell=True,
 		stdout=_stdout, stderr=_stderr)

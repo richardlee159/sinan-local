@@ -3,20 +3,19 @@ version: '3'
 
 services:
   master:
-    image: yz2297/locust_openwhisk
-    # ports:
-    #  - "8089:8089"
+    image: locustio/locust
     network_mode: host
     volumes:
       - ./src:/mnt/locust
-      - $HOME/sinan_locust_log:/mnt/locust_log
-    command: -f /mnt/locust/hotel_rps_100.py --master --csv=/mnt/locust_log/hotel --headless --host http://127.0.0.1:5000 --users ${USERS} -t ${EXP_TIME} --logfile /mnt/locust_log/hotel_locust_log.txt
+      - /home/pingheli/sinan_locust_log:/mnt/locust_log
+    command: --headless -f /mnt/locust/hotel_rps_1.py -H http://127.0.0.1:30001
+             -t ${EXP_TIME} -u ${USERS} -r 100 --logfile /mnt/locust_log/hotel_locust_log.txt
+             --csv=/mnt/locust_log/hotel --csv-full-history --master
   
   worker:
-    image: yz2297/locust_openwhisk
+    image: locustio/locust
     volumes:
       - ./src:/mnt/locust
-      - $HOME/sinan_locust_log:/mnt/locust_log
+      - /home/pingheli/sinan_locust_log:/mnt/locust_log
     network_mode: "host"
-    # command: -f /mnt/locust/hotel_rps_100.py --worker --master-host master
-    command: -f /mnt/locust/hotel_rps_100.py --worker
+    command: -f /mnt/locust/hotel_rps_1.py --worker

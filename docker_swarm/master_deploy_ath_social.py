@@ -1217,8 +1217,7 @@ def run_exp(users, log_dir):
 
 	locust_p = run_locust_docker_compose(
 		docker_compose_file=LocustDockerCompose,
-		duration=ExpTime + 120, users=users,
-		workers=2, quiet=True)
+		duration=ExpTime+120, users=users, workers=0, quiet=True)
 
 	assert(locust_p != None)
 

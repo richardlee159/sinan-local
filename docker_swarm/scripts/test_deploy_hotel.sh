@@ -1,7 +1,8 @@
 cd ../
-python3 master_deploy_ath_hotel.py --user-name yz2297 \
-	--stack-name hotelreservation \
-	--min-users 10 --max-users 40 --users-step 3 \
+python3 master_deploy_ath_hotel.py --user-name pingheli \
+	--namespace hotel-reservation \
+	--compose-file hotel-reservation.json \
+	--min-users 1000 --max-users 4000 --users-step 300 \
 	--exp-time 300 --measure-interval 1 --slave-port 40011 \
 	--deploy-config hotel_swarm_ath.json \
 	--gpu-config hotel_gpu.json --gpu-port 40010 \

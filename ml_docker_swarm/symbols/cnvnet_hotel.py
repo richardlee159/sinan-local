@@ -1,6 +1,5 @@
 import mxnet as mx
 import numpy as np
-from math_ops import *
 
 def get_symbol(bn_mom=0.9, workspace=512, dtype='float32'):
     

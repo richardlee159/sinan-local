@@ -38,32 +38,26 @@ replica_cpus = args.replica_cpus
 # cpu_percent = args.cpu_percent
 
 IP_ADDR = {}
-IP_ADDR["ath-1"]     = "128.253.128.64"
-IP_ADDR["ath-2"]     = "128.253.128.65"
-IP_ADDR["ath-3"]     = "128.253.128.66"
-IP_ADDR["ath-4"]     = "128.253.128.67"
-IP_ADDR["ath-5"]     = "128.253.128.68"
-IP_ADDR["ath-8"]     = "ath-8-ip"
-IP_ADDR["ath-9"]     = "ath-9-ip"
+IP_ADDR["autosys-12"]     = "10.1.0.4"
 
 service_config = {
-    "frontend":          {'max_replica': 1, 'max_cpus': 48},
-    "profile":           {'max_replica': 1, 'max_cpus': 16},
-    "search":            {'max_replica': 1, 'max_cpus': 32},
-    "geo":               {'max_replica': 1, 'max_cpus': 16},
-    "rate":              {'max_replica': 1, 'max_cpus': 16},
-    "recommendation":    {'max_replica': 1, 'max_cpus': 16},
-    "user":              {'max_replica': 1, 'max_cpus': 16},
-    "reservation":       {'max_replica': 1, 'max_cpus': 16},
-    "memcached-rate":    {'max_replica': 1, 'max_cpus': 8},
-    "memcached-profile": {'max_replica': 1, 'max_cpus': 8},
-    "memcached-reserve": {'max_replica': 1, 'max_cpus': 8},
-    "mongodb-geo":       {'max_replica': 1, 'max_cpus': 32},
-    "mongodb-profile":   {'max_replica': 1, 'max_cpus': 32},
-    "mongodb-rate":      {'max_replica': 1, 'max_cpus': 32},
-    "mongodb-recommendation":   {'max_replica': 1, 'max_cpus': 32},
-    "mongodb-reservation":      {'max_replica': 1, 'max_cpus': 32},
-    "mongodb-user":      {'max_replica': 1, 'max_cpus': 32}
+    "frontend":          {'max_replica': 1, 'max_cpus': 12},
+    "profile":           {'max_replica': 1, 'max_cpus': 4},
+    "search":            {'max_replica': 1, 'max_cpus': 8},
+    "geo":               {'max_replica': 1, 'max_cpus': 4},
+    "rate":              {'max_replica': 1, 'max_cpus': 4},
+    "recommendation":    {'max_replica': 1, 'max_cpus': 4},
+    "user":              {'max_replica': 1, 'max_cpus': 4},
+    "reservation":       {'max_replica': 1, 'max_cpus': 4},
+    "memcached-rate":    {'max_replica': 1, 'max_cpus': 4},
+    "memcached-profile": {'max_replica': 1, 'max_cpus': 4},
+    "memcached-reserve": {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-geo":       {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-profile":   {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-rate":      {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-recommendation":   {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-reservation":      {'max_replica': 1, 'max_cpus': 4},
+    "mongodb-user":      {'max_replica': 1, 'max_cpus': 4}
     # "consul":            {'max_replica': 1, 'max_cpus': 6}
     # "jaeger": {"replica": 1}
 }
@@ -85,14 +79,11 @@ for node in nodes:
     assert node in IP_ADDR
     node_config[node] = {}
     node_config[node]['ip_addr'] = IP_ADDR[node]
-    if node == 'ath-8':
-        node_config[node]['cpus'] = 88
+    if node == 'autosys-12':
+        node_config[node]['cpus'] = 32
         node_config[node]['label'] = 'type=compute'
-    elif node == 'ath-9':
-        node_config[node]['cpus'] = 88
-        node_config[node]['label'] = 'type=data'
     else:
-        node_config[node]['cpus'] = 40
+        node_config[node]['cpus'] = 32
         node_config[node]['label'] = 'type=data'
 
 cluster_config = {}

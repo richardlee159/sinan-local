@@ -21,6 +21,7 @@ from locust_util import *
 from master_slave_msg import *
 from master_predictor_msg import *
 from docker_swarm_util import *
+from k8s_util import *
 
 # DockerMetrics = [
 # 		'cpu_usage', # cpu cpu usage from docker, in terms of virtual cpu
@@ -53,9 +54,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--user-name', dest='user_name', type=str, default='yz2297')
 parser.add_argument('--setup-swarm', dest='setup_swarm', action='store_true')
 parser.add_argument('--deploy', dest='deploy', action='store_true')
-parser.add_argument('--stack-name', dest='stack_name', type=str, required=True)
 parser.add_argument('--benchmark', dest='benchmark', type=str, default='hotelReservation')
 parser.add_argument('--compose-file', dest='compose_file', type=str, default='docker-compose-swarm.yml')
+parser.add_argument('--namespace', dest='namespace', type=str, default='hotel-reservation')
+parser.add_argument('--pod-count', dest='pod_count', type=int, default=19)
 parser.add_argument('--min-users', dest='min_users', type=int, required=True)
 parser.add_argument('--max-users', dest='max_users', type=int, required=True)
 parser.add_argument('--users-step', dest='users_step', type=int, required=True)
@@ -108,10 +110,11 @@ args = parser.parse_args()
 Username = args.user_name
 Deploy = args.deploy
 SetupSwarm = args.setup_swarm
-Stackname = args.stack_name
 Benchmark = args.benchmark
 BenchmarkDir =  Path.cwd() / '..' / 'benchmarks' / args.benchmark
 ComposeFile = BenchmarkDir / args.compose_file
+Namespace = args.namespace
+PodCount = args.pod_count
 ExpTime = args.exp_time	# in second
 MeasureInterval = args.measure_interval	# in second
 SlavePort = args.slave_port
@@ -1141,12 +1144,11 @@ def run_exp(users, log_dir):
 
 	locust_p = run_locust_docker_compose(
 		docker_compose_file=LocustDockerCompose, 
-		duration=ExpTime+60, users=users, 
-		workers=0, quiet=True)
+		duration=ExpTime+120, users=users, workers=0, quiet=True)
 
 	assert(locust_p != None)
 
-	time.sleep(60)	# wait for latencys to become stable
+	time.sleep(120)	# wait for latencys to become stable
 
 	StartTime = time.time()
 	# start adjusting rsc
@@ -1262,10 +1264,8 @@ def main():
 
 	global BenchmarkDir
 	global Benchmark
-	global Stackname
 	global ComposeFile
 
-	global Stackname
 	global Username
 
 	# new 
@@ -1273,19 +1273,11 @@ def main():
 	global GpuSock
 
 	if SetupSwarm:
-		# establish docker swarm
-		worker_nodes = list(Servers.keys())
-		worker_nodes.remove(HostServer)
-		assert HostServer not in worker_nodes
-		setup_swarm(username=Username, worker_nodes=worker_nodes)
-		# label nodes
-		for server in Servers:
-			if 'label' in Servers[server]:
-				update_node_label(server, Servers[server]['label'])
+		raise NotImplementedError
 	#---- connect slaves -----#
 	slave_service_config = {}
 	slave_service_config['services'] = list(Services)
-	slaves = setup_slaves(stack_name=Stackname, username=Username, 
+	slaves = setup_slaves(namespace=Namespace, username=Username, 
 		servers=Servers, 
 		slave_port=SlavePort, slave_script_dir=Path.cwd(), 
 		service_config=slave_service_config)
@@ -1305,22 +1297,8 @@ def main():
 	while i < len(TestUsers):
 		users = TestUsers[i]
 		if Deploy:
-			ath_9_cmd = 'docker-compose -f ' + str( BenchmarkDir / 'docker-compose-ath9.yml') + ' down'
-			p = ssh(Username, 'ath-9', ath_9_cmd, quiet=False)
-			p.wait()
-
-			ath_8_cmd = 'docker-compose -f ' + str( BenchmarkDir / 'docker-compose-ath8.yml') + ' down'
-			p = ssh(Username, 'ath-8', ath_8_cmd, quiet=False)
-			p.wait()
-
-			ath_9_cmd = 'docker-compose -f ' + str( BenchmarkDir / 'docker-compose-ath9.yml') + ' up -d'
-			p = ssh(Username, 'ath-9', ath_9_cmd, quiet=False)
-			p.wait()
-
-			ath_8_cmd = 'docker-compose -f ' + str( BenchmarkDir / 'docker-compose-ath8.yml') + ' up -d'
-			p = ssh(Username, 'ath-8', ath_8_cmd, quiet=False)
-			p.wait()
-
+			k8s_deploy(benchmark_dir=BenchmarkDir, compose_file=ComposeFile,
+				namespace=Namespace, pod_count=PodCount)
 			time.sleep(10)
 			
 		users_dir = DataDir / ('users_' + str(users))

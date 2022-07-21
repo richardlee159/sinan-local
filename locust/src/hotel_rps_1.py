@@ -1,27 +1,19 @@
-import random
-from locust import HttpUser, task, tag, between
-import base64
-import os
-from pathlib import Path
-import logging
-import numpy as np
-import time
-import json
-
+from locust import FastHttpUser, task
 import locust.stats
-locust.stats.CSV_STATS_INTERVAL_SEC = 1 # second
+import random
+import logging
+import time
+
+locust.stats.CONSOLE_STATS_INTERVAL_SEC = 600
+locust.stats.HISTORY_STATS_INTERVAL_SEC = 1
+locust.stats.CSV_STATS_INTERVAL_SEC = 1
+locust.stats.CSV_STATS_FLUSH_INTERVAL_SEC = 1
+locust.stats.CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 1
+# locust.stats.PERCENTILES_TO_REPORT = [0.50, 0.80, 0.90, 0.95, 0.98, 0.99, 0.995, 0.999, 1.0]
 
 random.seed(time.time())
-
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# logging.basicConfig(level=logging.INFO,
-#                     # filename='/mnt/locust_log/locust_openwhisk_log.txt',
-#                     # filemode='w+',
-#                     format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
 logging.basicConfig(level=logging.INFO)
+
 
 def get_user():
     user_id = random.randint(0, 500)
@@ -31,24 +23,19 @@ def get_user():
         password = password + str(user_id)
     return user_name, password
 
-mean_iat = 0.005  # seconds
+mean_iat = 1  # seconds
 
-class SocialMediaUser(HttpUser):
-    # wait_time = between(5, 9)
+class SocialMediaUser(FastHttpUser):
     # return wait time in second
     def wait_time(self):
-        global intervals
         global mean_iat
-        return np.random.exponential(scale=mean_iat)
-        # return random.choice(intervals)
-        # self.last_wait_time += 1
-        # return self.last_wait_time
+        return random.expovariate(lambd=1/mean_iat)
 
     @task(600)
-    @tag('search_hotel')
     def search_hotel(self):
         in_date = random.randint(9, 23)
         out_date = random.randint(in_date+1, 24)
+
         if in_date <= 9:
             in_date = "2015-04-0" + str(in_date)
         else:
@@ -59,45 +46,36 @@ class SocialMediaUser(HttpUser):
         else:
             out_date = "2015-04-" + str(out_date)
 
-
         lat = 38.0235 + (random.randint(0, 481) - 240.5)/1000.0
         lon = -122.095 + (random.randint(0, 325) - 157.0)/1000.0
 
-        url = '/hotels?inDate=' + in_date + '&outDate=' + out_date + \
+        path = '/hotels?inDate=' + in_date + '&outDate=' + out_date + \
             '&lat=' + str(lat) + "&lon=" + str(lon)
 
-        r = self.client.get(url, name='search_hotel', timeout=10)
-        if r.status_code > 202:
-            logging.warning('search_hotel resp.status = %d, text=%s' %(r.status_code,
-                r.text))
+        self.client.get(path, name='search_hotel')
 
     @task(390)
-    @tag('recommend')
     def recommend(self):
         coin = random.random()
         if coin < 0.33:
-            req = 'dis'
+            req_param = 'dis'
         elif coin < 0.66:
-            req = 'rate'
+            req_param = 'rate'
         else:
-            req = 'price'
+            req_param = 'price'
 
         lat = 38.0235 + (random.randint(0, 481) - 240.5)/1000.0
         lon = -122.095 + (random.randint(0, 325) - 157.0)/1000.0
 
-        url = '/recommendations?require=' + req + \
+        path = '/recommendations?require=' + req_param + \
             "&lat=" + str(lat) + "&lon=" + str(lon)
 
-        r = self.client.get(url, name='recommend', timeout=10)
-        if r.status_code > 202:
-            logging.warning('recommend resp.status = %d, text=%s' %(r.status_code,
-                r.text))
+        self.client.get(path, name='recommend')
 
     @task(5)
-    @tag('reserve')
     def reserve(self):
         in_date = random.randint(9, 23)
-        out_date = random.randint(in_date+1, 24)
+        out_date = in_date + random.randint(1, 5)
 
         if in_date <= 9:
             in_date = "2015-04-0" + str(in_date)
@@ -117,21 +95,16 @@ class SocialMediaUser(HttpUser):
 
         num_room = 1
 
-        url = '/reservation?inDate=' + in_date + "&outDate=" + out_date + \
+        path = '/reservation?inDate=' + in_date + "&outDate=" + out_date + \
             "&lat=" + str(lat) + "&lon=" + str(lon) + "&hotelId=" + hotel_id + \
             "&customerName=" + user_name + "&username=" + user_name + \
             "&password=" + password + "&number=" + str(num_room)
 
-        r = self.client.post(url, name='reserve', timeout=10)
+        self.client.post(path, name='reserve')
 
     @task(5)
-    @tag('user_login')
-    def read_user_timeline(self):
+    def user_login(self):
         user_name, password = get_user()
-        url = '/user?username=' + user_name + "&password=" + password
+        path = '/user?username=' + user_name + "&password=" + password
 
-        r = self.client.get(url, name='user_login', timeout=10)
-
-        if r.status_code > 202:
-            logging.warning('read_user_timeline resp.status = %d, text=%s' %(r.status_code,
-                r.text))
+        self.client.get(path, name='user_login')
