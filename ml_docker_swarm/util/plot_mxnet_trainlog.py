@@ -50,12 +50,14 @@ def plot_log(log_file):
 	title_str = 'train-rmse vs valid-rmse'
 	# plt.title(title_str, fontsize=18, y = 0.9)
 	plt.title(title_str, fontsize=18)
-	# plt.xlabel('time(s)', fontsize=18)
+	plt.xlabel('epoch', fontsize=18)
 	# ax.xaxis.set_label_coords(0.50, 0.08)
 	plt.ylabel('rmse', fontsize=18)
 	# plt.yticks(np.arange(20, 100, 10))
-	plt.plot(epochs, train_rmse, linestyle = '-', color = 'red', linewidth = 1.0)
-	plt.plot(epochs, valid_rmse, linestyle = '-', color = 'blue', linewidth = 1.0)
+	plt.plot(epochs, train_rmse, linestyle = '-', color = 'red', linewidth = 1.0, label = 'train')
+	plt.plot(epochs, valid_rmse, linestyle = '-', color = 'blue', linewidth = 1.0, label = 'valid')
+	plt.ylim(0, 500)
+	plt.legend()
 	for e in epoch_change_rate:
 		plt.axvline(x=e, color='green')
 	plt.tick_params(axis='y', which='major', labelsize=18)
