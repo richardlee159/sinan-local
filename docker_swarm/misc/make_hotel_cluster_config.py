@@ -44,23 +44,23 @@ IP_ADDR["autosys-f14"]     = "172.22.0.16"
 IP_ADDR["autosys-f15"]     = "172.22.0.17"
 
 service_config = {
-    "frontend":          {'max_replica': 1, 'max_cpus': 12},
-    "profile":           {'max_replica': 1, 'max_cpus': 4},
+    "frontend":          {'max_replica': 1, 'max_cpus': 16},
+    "profile":           {'max_replica': 1, 'max_cpus': 8},
     "search":            {'max_replica': 1, 'max_cpus': 8},
-    "geo":               {'max_replica': 1, 'max_cpus': 4},
-    "rate":              {'max_replica': 1, 'max_cpus': 4},
-    "recommendation":    {'max_replica': 1, 'max_cpus': 4},
-    "user":              {'max_replica': 1, 'max_cpus': 4},
-    "reservation":       {'max_replica': 1, 'max_cpus': 4},
-    "memcached-rate":    {'max_replica': 1, 'max_cpus': 4},
-    "memcached-profile": {'max_replica': 1, 'max_cpus': 4},
-    "memcached-reserve": {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-geo":       {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-profile":   {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-rate":      {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-recommendation":   {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-reservation":      {'max_replica': 1, 'max_cpus': 4},
-    "mongodb-user":      {'max_replica': 1, 'max_cpus': 4}
+    "geo":               {'max_replica': 1, 'max_cpus': 8},
+    "rate":              {'max_replica': 1, 'max_cpus': 8},
+    "recommendation":    {'max_replica': 1, 'max_cpus': 8},
+    "user":              {'max_replica': 1, 'max_cpus': 8},
+    "reservation":       {'max_replica': 1, 'max_cpus': 8},
+    "memcached-rate":    {'max_replica': 1, 'max_cpus': 8},
+    "memcached-profile": {'max_replica': 1, 'max_cpus': 8},
+    "memcached-reserve": {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-geo":       {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-profile":   {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-rate":      {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-recommendation":   {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-reservation":      {'max_replica': 1, 'max_cpus': 8},
+    "mongodb-user":      {'max_replica': 1, 'max_cpus': 8}
     # "consul":            {'max_replica': 1, 'max_cpus': 6}
     # "jaeger": {"replica": 1}
 }
