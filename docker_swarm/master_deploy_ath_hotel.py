@@ -289,7 +289,7 @@ def is_reduce_op(op_name):
 def get_op_cpus(service, op_name, cur_cpu, max_cpu):
 	cpus = -1
 	min_cpu = get_min_cpus(cur_cpu, get_cpu_util(service), max_cpu)
-	assert min_cpu >= 0.2
+	assert min_cpu >= 0.1
 	if 'x' in op_name:
 		r = float(op_name.replace('x', ''))
 		if r > 0:
@@ -313,14 +313,14 @@ def get_min_cpus(cur_cpu, cpu_util, max_cpu):
 	if cpu_util > MaxCpuUtil:
 		return min(math.ceil(cur_cpu*cpu_util/MaxCpuUtil), max_cpu)
 	else:
-		return 0.5
+		return 0.1
 
 def get_divided_cpus(cur_cpus):
-	return 0.5
-	# if cur_cpus >= 1:
-	# 	return 0.8
-	# else:
-	# 	return max(cur_cpus-0.2, 0.2)
+	# return 0.5
+	if cur_cpus >= 1:
+		return 0.8
+	else:
+		return max(cur_cpus-0.2, 0.1)
 
 # TODO: implement init & init_data
 def init_data():
