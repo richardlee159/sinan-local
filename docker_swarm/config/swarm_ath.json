@@ -1,9 +1,24 @@
 {
     "nodes": {
-        "autosys-12": {
+        "autosys-f22": {
             "cpus": 32,
-            "ip_addr": "10.1.0.4",
+            "ip_addr": "172.22.0.26",
             "label": "type=compute"
+        },
+        "autosys-f23": {
+            "cpus": 32,
+            "ip_addr": "172.22.0.27",
+            "label": "type=data"
+        },
+        "autosys-f24": {
+            "cpus": 32,
+            "ip_addr": "172.22.0.28",
+            "label": "type=data"
+        },
+        "autosys-f25": {
+            "cpus": 32,
+            "ip_addr": "172.22.0.29",
+            "label": "type=data"
         }
     },
     "replica_cpus": 4,

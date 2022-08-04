@@ -1,0 +1,170 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-home-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-home-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-home-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-f24",
+            "containers": [
+              {
+                "name": "write-home-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "WriteHomeTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-home-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-home-timeline-service"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "deathStarProject": "social-network",
+            "appName": "write-user-timeline-service"
+          }
+        },
+        "template": {
+          "metadata": {
+            "name": "write-user-timeline-service",
+            "labels": {
+              "deathStarProject": "social-network",
+              "appName": "write-user-timeline-service"
+            }
+          },
+          "spec": {
+            "nodeName": "autosys-f24",
+            "containers": [
+              {
+                "name": "write-user-timeline-service",
+                "image": "yz2297/social-network-ml-swarm",
+                "command": [
+                  "WriteUserTimelineService"
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/social-network-microservices/config",
+                    "name": "config"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "hostPath": {
+                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
+                  "type": "Directory"
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "enableServiceLinks": false
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "namespace": "social-network-ml",
+        "name": "write-user-timeline-service",
+        "labels": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 9090
+          }
+        ],
+        "selector": {
+          "deathStarProject": "social-network",
+          "appName": "write-user-timeline-service"
+        }
+      }
+    }
+  ]
+}

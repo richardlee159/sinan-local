@@ -56,7 +56,7 @@ parser.add_argument('--user-name', dest='user_name', type=str, default='yz2297')
 parser.add_argument('--setup-swarm', dest='setup_swarm', action='store_true')
 parser.add_argument('--deploy', dest='deploy', action='store_true')
 parser.add_argument('--benchmark', dest='benchmark', type=str, default='socialNetwork-ml-swarm')
-parser.add_argument('--compose-file', dest='compose_file', type=str, default='social-network-ml.json')
+parser.add_argument('--compose-file', dest='compose_file', type=str, nargs='+')
 parser.add_argument('--namespace', dest='namespace', type=str, default='social-network-ml')
 parser.add_argument('--pod-count', dest='pod_count', type=int, default=29)
 parser.add_argument('--min-users', dest='min_users', type=int, required=True)
@@ -119,7 +119,7 @@ Deploy = args.deploy
 SetupSwarm = args.setup_swarm
 Benchmark = args.benchmark
 BenchmarkDir =  Path.cwd() / '..' / 'benchmarks' / args.benchmark
-ComposeFile = BenchmarkDir / args.compose_file
+ComposeFile = list(map(lambda f: BenchmarkDir / f, args.compose_file))
 Namespace = args.namespace
 PodCount = args.pod_count
 ExpTime = args.exp_time	# in second

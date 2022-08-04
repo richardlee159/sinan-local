@@ -40,7 +40,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f23",
             "containers": [
               {
                 "name": "jaeger",
@@ -117,7 +117,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f23",
             "containers": [
               {
                 "name": "nginx-thrift",
@@ -252,7 +252,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "compose-post-service",
@@ -334,7 +334,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "compose-post-redis",
@@ -403,7 +403,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "home-timeline-service",
@@ -485,7 +485,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "home-timeline-redis",
@@ -554,7 +554,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "media-service",
@@ -636,7 +636,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "post-storage-service",
@@ -718,7 +718,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "post-storage-memcached",
@@ -792,7 +792,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "post-storage-mongodb",
@@ -860,7 +860,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "social-graph-service",
@@ -942,7 +942,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "social-graph-mongodb",
@@ -1010,7 +1010,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "social-graph-redis",
@@ -1079,7 +1079,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "text-service",
@@ -1161,7 +1161,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "unique-id-service",
@@ -1243,7 +1243,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "url-shorten-service",
@@ -1325,7 +1325,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "user-mention-service",
@@ -1407,7 +1407,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "user-service",
@@ -1489,7 +1489,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "user-memcached",
@@ -1563,7 +1563,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "user-mongodb",
@@ -1631,7 +1631,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "user-timeline-service",
@@ -1713,7 +1713,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "user-timeline-mongodb",
@@ -1781,7 +1781,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "user-timeline-redis",
@@ -1827,88 +1827,6 @@
       "kind": "Deployment",
       "metadata": {
         "namespace": "social-network-ml",
-        "name": "write-home-timeline-service",
-        "labels": {
-          "deathStarProject": "social-network",
-          "appName": "write-home-timeline-service"
-        }
-      },
-      "spec": {
-        "replicas": 1,
-        "selector": {
-          "matchLabels": {
-            "deathStarProject": "social-network",
-            "appName": "write-home-timeline-service"
-          }
-        },
-        "template": {
-          "metadata": {
-            "name": "write-home-timeline-service",
-            "labels": {
-              "deathStarProject": "social-network",
-              "appName": "write-home-timeline-service"
-            }
-          },
-          "spec": {
-            "nodeName": "autosys-12",
-            "containers": [
-              {
-                "name": "write-home-timeline-service",
-                "image": "yz2297/social-network-ml-swarm",
-                "command": [
-                  "WriteHomeTimelineService"
-                ],
-                "volumeMounts": [
-                  {
-                    "mountPath": "/social-network-microservices/config",
-                    "name": "config"
-                  }
-                ]
-              }
-            ],
-            "volumes": [
-              {
-                "name": "config",
-                "hostPath": {
-                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
-                  "type": "Directory"
-                }
-              }
-            ],
-            "restartPolicy": "Always",
-            "enableServiceLinks": false
-          }
-        }
-      }
-    },
-    {
-      "apiVersion": "v1",
-      "kind": "Service",
-      "metadata": {
-        "namespace": "social-network-ml",
-        "name": "write-home-timeline-service",
-        "labels": {
-          "deathStarProject": "social-network",
-          "appName": "write-home-timeline-service"
-        }
-      },
-      "spec": {
-        "ports": [
-          {
-            "port": 9090
-          }
-        ],
-        "selector": {
-          "deathStarProject": "social-network",
-          "appName": "write-home-timeline-service"
-        }
-      }
-    },
-    {
-      "apiVersion": "apps/v1",
-      "kind": "Deployment",
-      "metadata": {
-        "namespace": "social-network-ml",
         "name": "write-home-timeline-rabbitmq",
         "labels": {
           "deathStarProject": "social-network",
@@ -1932,7 +1850,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "write-home-timeline-rabbitmq",
@@ -1983,88 +1901,6 @@
       "kind": "Deployment",
       "metadata": {
         "namespace": "social-network-ml",
-        "name": "write-user-timeline-service",
-        "labels": {
-          "deathStarProject": "social-network",
-          "appName": "write-user-timeline-service"
-        }
-      },
-      "spec": {
-        "replicas": 1,
-        "selector": {
-          "matchLabels": {
-            "deathStarProject": "social-network",
-            "appName": "write-user-timeline-service"
-          }
-        },
-        "template": {
-          "metadata": {
-            "name": "write-user-timeline-service",
-            "labels": {
-              "deathStarProject": "social-network",
-              "appName": "write-user-timeline-service"
-            }
-          },
-          "spec": {
-            "nodeName": "autosys-12",
-            "containers": [
-              {
-                "name": "write-user-timeline-service",
-                "image": "yz2297/social-network-ml-swarm",
-                "command": [
-                  "WriteUserTimelineService"
-                ],
-                "volumeMounts": [
-                  {
-                    "mountPath": "/social-network-microservices/config",
-                    "name": "config"
-                  }
-                ]
-              }
-            ],
-            "volumes": [
-              {
-                "name": "config",
-                "hostPath": {
-                  "path": "/home/pingheli/sinan-local/benchmarks/socialNetwork-ml-swarm/./config",
-                  "type": "Directory"
-                }
-              }
-            ],
-            "restartPolicy": "Always",
-            "enableServiceLinks": false
-          }
-        }
-      }
-    },
-    {
-      "apiVersion": "v1",
-      "kind": "Service",
-      "metadata": {
-        "namespace": "social-network-ml",
-        "name": "write-user-timeline-service",
-        "labels": {
-          "deathStarProject": "social-network",
-          "appName": "write-user-timeline-service"
-        }
-      },
-      "spec": {
-        "ports": [
-          {
-            "port": 9090
-          }
-        ],
-        "selector": {
-          "deathStarProject": "social-network",
-          "appName": "write-user-timeline-service"
-        }
-      }
-    },
-    {
-      "apiVersion": "apps/v1",
-      "kind": "Deployment",
-      "metadata": {
-        "namespace": "social-network-ml",
         "name": "write-user-timeline-rabbitmq",
         "labels": {
           "deathStarProject": "social-network",
@@ -2088,7 +1924,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f24",
             "containers": [
               {
                 "name": "write-user-timeline-rabbitmq",
@@ -2162,7 +1998,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f22",
             "containers": [
               {
                 "name": "media-filter-service",
@@ -2241,7 +2077,7 @@
             }
           },
           "spec": {
-            "nodeName": "autosys-12",
+            "nodeName": "autosys-f25",
             "containers": [
               {
                 "name": "text-filter-service",

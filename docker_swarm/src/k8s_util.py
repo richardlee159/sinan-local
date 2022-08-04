@@ -24,8 +24,13 @@ def set_cpu_limit(uid, limit, period=0.1):
     stat_path('cpu.cfs_quota_us', uid).write_text(str(quota_us))
 
 def kubectl_delete(path, namespace):
-    subprocess.run(['kubectl', 'delete', '-f', path],
-        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    if not isinstance(path, list):
+        path = [path]
+    for i, p in enumerate(reversed(path)):
+        if i:
+            time.sleep(60)
+        subprocess.run(['kubectl', 'delete', '-f', str(p)],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     while True:
         p = subprocess.run(['kubectl', 'get', 'pods', f'-n={namespace}',
             r'-o=jsonpath={range .items[*]}{.metadata.name} {.status.phase}{"\n"}{end}'],
@@ -49,8 +54,13 @@ def kubectl_apply(path, namespace, pod_count):
             return False
         return True
 
-    subprocess.run(['kubectl', 'apply', '-f', path],
-        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)
+    if not isinstance(path, list):
+        path = [path]
+    for i, p in enumerate(path):
+        if i:
+            time.sleep(60)
+        subprocess.run(['kubectl', 'apply', '-f', str(p)],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)
     logging.info('wait for services to converge')
     while True:
         p = subprocess.run(['kubectl', 'get', 'pods', f'-n={namespace}',
@@ -62,9 +72,9 @@ def kubectl_apply(path, namespace, pod_count):
         time.sleep(1)
 
 def k8s_deploy(benchmark_dir, compose_file, namespace, pod_count):
-    kubectl_delete(str(compose_file), namespace)
+    kubectl_delete(compose_file, namespace)
     time.sleep(5)
-    kubectl_apply(str(compose_file), namespace, pod_count)
+    kubectl_apply(compose_file, namespace, pod_count)
     time.sleep(5)
 
     # set up social network topoloy and post storage

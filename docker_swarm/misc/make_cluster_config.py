@@ -38,7 +38,10 @@ replica_cpus = args.replica_cpus
 # cpu_percent = args.cpu_percent
 
 IP_ADDR = {}
-IP_ADDR["autosys-12"]     = "10.1.0.4"
+IP_ADDR["autosys-f22"]     = "172.22.0.26"
+IP_ADDR["autosys-f23"]     = "172.22.0.27"
+IP_ADDR["autosys-f24"]     = "172.22.0.28"
+IP_ADDR["autosys-f25"]     = "172.22.0.29"
 
 service_config = {
     "nginx-thrift":         {'max_replica': 1, 'max_cpus': 12},
@@ -104,7 +107,7 @@ for node in nodes:
     assert node in IP_ADDR
     node_config[node] = {}
     node_config[node]['ip_addr'] = IP_ADDR[node]
-    if node == 'autosys-12':
+    if node == 'autosys-f22':
         node_config[node]['cpus'] = 32
         node_config[node]['label'] = 'type=compute'
     else:

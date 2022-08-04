@@ -1,7 +1,7 @@
 {
     "gpus": [],
-    "host": "autosys-12",
-    "ip_addr": "10.1.0.4",
+    "host": "autosys-f26",
+    "ip_addr": "172.22.0.30",
     "script": "social_media_predictor.py",
     "working_dir": "/home/pingheli/sinan-local/ml_docker_swarm"
 }
