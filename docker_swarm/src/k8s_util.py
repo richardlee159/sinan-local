@@ -79,8 +79,8 @@ def k8s_deploy(benchmark_dir, compose_file, namespace, pod_count):
 
     # set up social network topoloy and post storage
     if 'social' in namespace:
-        cmd = 'python3 ' + str(benchmark_dir / 'scripts' / 'init_social_graph.py') + ' --port 30001 --compose' + \
-             ' --graph ' + str(benchmark_dir / 'datasets' / 'social-graph' / 'socfb-Reed98' / 'socfb-Reed98.mtx')
+        cmd = 'python3 ' + str(benchmark_dir / 'scripts' / 'setup_social_graph_init_data_sync.py') + \
+		 	' ' + str(benchmark_dir / 'datasets' / 'social-graph' / 'socfb-Reed98' / 'socfb-Reed98.mtx')
         subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr, preexec_fn=os.setsid,bufsize=-1)
         # print 'setup_social_graph_init_data.py out: ', out
         logging.info('social network set up done')
