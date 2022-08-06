@@ -1,15 +1,18 @@
 import random
-from locust import HttpUser, task, tag, between
+from locust import FastHttpUser, task, tag, between
 import base64
 import os
 from pathlib import Path
 import logging
-import numpy as np
 import time
 import json
 
 import locust.stats
-locust.stats.CSV_STATS_INTERVAL_SEC = 1 # second
+locust.stats.CONSOLE_STATS_INTERVAL_SEC = 600
+locust.stats.HISTORY_STATS_INTERVAL_SEC = 1
+locust.stats.CSV_STATS_INTERVAL_SEC = 1
+locust.stats.CSV_STATS_FLUSH_INTERVAL_SEC = 1
+locust.stats.CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 5
 
 random.seed(time.time())
 
@@ -163,13 +166,13 @@ def compose_random_user():
 
 mean_iat = 1  # seconds
 
-class SocialMediaUser(HttpUser):
+class SocialMediaUser(FastHttpUser):
     # wait_time = between(5, 9)
     # return wait time in second
     def wait_time(self):
         global intervals
         global mean_iat
-        return np.random.exponential(scale=mean_iat)
+        return random.expovariate(lambd=1/mean_iat)
         # return random.choice(intervals)
         # self.last_wait_time += 1
         # return self.last_wait_time
@@ -242,7 +245,7 @@ class SocialMediaUser(HttpUser):
         #     data=body, name="/compose_post")
 
         r = self.client.post(url, params=params,
-            data=body, name='compose_post', timeout=10)
+            data=body, name='compose_post')
 
         if r.status_code > 202:
             logging.warning('compose_post resp.status = %d, text=%s' %(r.status_code,
@@ -264,7 +267,7 @@ class SocialMediaUser(HttpUser):
         # r = self.client.get(url, params=args,
         #     verify=False, name='/read_home_timeline')
 
-        r = self.client.get(url, params=args, name='read_home_line', timeout=10)
+        r = self.client.get(url, params=args, name='read_home_line')
 
         if r.status_code > 202:
             logging.warning('read_home_timeline resp.status = %d, text=%s' %(r.status_code,
@@ -285,7 +288,7 @@ class SocialMediaUser(HttpUser):
         # r = self.client.get(url, params=args,
         #     verify=False, name='/read_home_timeline')
 
-        r = self.client.get(url, params=args, name='read_user_timeline', timeout=10)
+        r = self.client.get(url, params=args, name='read_user_timeline')
 
         if r.status_code > 202:
             logging.warning('read_user_timeline resp.status = %d, text=%s' %(r.status_code,
