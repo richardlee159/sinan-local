@@ -7,7 +7,7 @@ services:
     network_mode: host
     volumes:
       - ./src:/mnt/locust
-      - /home/pingheli/sinan_locust_log:/mnt/locust_log
+      - $HOME/sinan_locust_log:/mnt/locust_log
       - ./base64_images:/mnt/social_images
     command: --headless -f /mnt/locust/socialml_rps_1.py -H http://127.0.0.1:30001
              -t ${EXP_TIME} -u ${USERS} -r 10 --logfile /mnt/locust_log/social_locust_log.txt
@@ -17,7 +17,7 @@ services:
     image: locustio/locust
     volumes:
       - ./src:/mnt/locust
-      - /home/pingheli/sinan_locust_log:/mnt/locust_log
+      - $HOME/sinan_locust_log:/mnt/locust_log
       - ./base64_images:/mnt/social_images
     network_mode: "host"
     command: -f /mnt/locust/socialml_rps_1.py --worker

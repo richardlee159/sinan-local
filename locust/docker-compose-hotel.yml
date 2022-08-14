@@ -7,7 +7,7 @@ services:
     network_mode: host
     volumes:
       - ./src:/mnt/locust
-      - /home/pingheli/sinan_locust_log:/mnt/locust_log
+      - $HOME/sinan_locust_log:/mnt/locust_log
     command: --headless -f /mnt/locust/hotel_rps_1.py -H http://127.0.0.1:30001
              -t ${EXP_TIME} -u ${USERS} -r 100 --logfile /mnt/locust_log/hotel_locust_log.txt
              --csv=/mnt/locust_log/hotel --csv-full-history --master
@@ -16,6 +16,6 @@ services:
     image: locustio/locust
     volumes:
       - ./src:/mnt/locust
-      - /home/pingheli/sinan_locust_log:/mnt/locust_log
+      - $HOME/sinan_locust_log:/mnt/locust_log
     network_mode: "host"
     command: -f /mnt/locust/hotel_rps_1.py --worker
