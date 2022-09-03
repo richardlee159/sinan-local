@@ -1,8 +1,9 @@
-from locust import FastHttpUser, task
+from locust import FastHttpUser, LoadTestShape, task
 import locust.stats
 import random
 import logging
 import time
+from pathlib import Path
 
 locust.stats.CONSOLE_STATS_INTERVAL_SEC = 600
 locust.stats.HISTORY_STATS_INTERVAL_SEC = 1
@@ -108,3 +109,18 @@ class SocialMediaUser(FastHttpUser):
         path = '/user?username=' + user_name + "&password=" + password
 
         self.client.get(path, name='user_login')
+
+
+RPS = list(map(int, Path('/mnt/rps.txt').read_text().splitlines()))
+
+
+class CustomShape(LoadTestShape):
+    time_limit = len(RPS)
+    spawn_rate = 100
+
+    def tick(self):
+        run_time = self.get_run_time()
+        if run_time < self.time_limit:
+            user_count = RPS[int(run_time)]
+            return (user_count, self.spawn_rate)
+        return None

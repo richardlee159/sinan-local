@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 
 def run_locust_docker_compose(docker_compose_file, 
-		duration, users, workers=0, quiet=False):
+		tracefile, workers=1, quiet=False):
 	# _stdout = subprocess.PIPE
 	_stdout = sys.stdout
 	_stderr = sys.stderr
@@ -16,10 +16,8 @@ def run_locust_docker_compose(docker_compose_file,
 		_stderr = subprocess.DEVNULL
 
 	locust_proc = None
-	if workers == 0:
-		workers = max(1, users // 500)
 	# env variables
-	cmd = 'USERS=' + str(users) + ' EXP_TIME=' + str(duration) + 's '
+	cmd = 'TRACEFILE=' + str(tracefile) + ' '
 	cmd += 'docker-compose -f ' + str(docker_compose_file) + \
 		' up --scale worker=' + str(workers)
 	print(cmd)

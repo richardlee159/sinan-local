@@ -8,8 +8,9 @@ services:
     volumes:
       - ./src:/mnt/locust
       - $HOME/sinan_locust_log:/mnt/locust_log
+      - ${TRACEFILE}:/mnt/rps.txt
     command: --headless -f /mnt/locust/hotel_rps_1.py -H http://127.0.0.1:30001
-             -t ${EXP_TIME} -u ${USERS} -r 100 --logfile /mnt/locust_log/hotel_locust_log.txt
+             --logfile /mnt/locust_log/hotel_locust_log.txt
              --csv=/mnt/locust_log/hotel --csv-full-history --master
   
   worker:
@@ -17,5 +18,6 @@ services:
     volumes:
       - ./src:/mnt/locust
       - $HOME/sinan_locust_log:/mnt/locust_log
+      - ${TRACEFILE}:/mnt/rps.txt
     network_mode: "host"
     command: -f /mnt/locust/hotel_rps_1.py --worker
