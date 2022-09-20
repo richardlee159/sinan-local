@@ -59,10 +59,7 @@ parser.add_argument('--benchmark', dest='benchmark', type=str, default='socialNe
 parser.add_argument('--compose-file', dest='compose_file', type=str, nargs='+')
 parser.add_argument('--namespace', dest='namespace', type=str, default='social-network-ml')
 parser.add_argument('--pod-count', dest='pod_count', type=int, default=29)
-parser.add_argument('--min-users', dest='min_users', type=int, required=True)
-parser.add_argument('--max-users', dest='max_users', type=int, required=True)
-parser.add_argument('--users-step', dest='users_step', type=int, required=True)
-parser.add_argument('--exp-time', dest='exp_time', type=int, required=True)
+parser.add_argument('--trace-dir', dest='trace_dir', type=str, required=True)
 parser.add_argument('--measure-interval', dest='measure_interval', type=int, default=1)
 parser.add_argument('--slave-port', dest='slave_port', type=int, required=True)
 parser.add_argument('--deploy-config', dest='deploy_config', type=str, required=True)
@@ -122,7 +119,6 @@ BenchmarkDir =  Path.cwd() / '..' / 'benchmarks' / args.benchmark
 ComposeFile = list(map(lambda f: BenchmarkDir / f, args.compose_file))
 Namespace = args.namespace
 PodCount = args.pod_count
-ExpTime = args.exp_time	# in second
 MeasureInterval = args.measure_interval	# in second
 SlavePort = args.slave_port
 DeployConfig = Path.cwd() / 'config' / args.deploy_config.strip()
@@ -234,10 +230,7 @@ with open(str(GpuServerConfig), 'r') as f:
 # -----------------------------------------------------------------------
 # experiment parameters
 # -----------------------------------------------------------------------
-MinUsers = args.min_users
-MaxUsers = args.max_users
-UsersStep = args.users_step
-TestUsers  	 = range(MinUsers, MaxUsers+1, UsersStep)
+TraceDir   = Path(args.trace_dir)
 StartTime			 = -1		# the time that the script started
 ViolTimeout	 = args.viol_timeout	    # #cycles of continuous violations after which the application is unlikely to recover even at max rsc
 
@@ -1167,9 +1160,8 @@ def save_states(log_dir):
 
 
 # return true if application needs redeloyed
-def run_exp(users, log_dir):
+def run_exp(tracefile, log_dir):
 	global ViolTimeout
-	global ExpTime
 	global MeasureInterval
 	global StateLog
 	global ActionLog
@@ -1198,7 +1190,7 @@ def run_exp(users, log_dir):
 		os.makedirs(str(log_dir))
 
 	# states_path 	= log_dir / 'states.txt'
-	logging.info('\nTest users: ' + str(users))
+	logging.info('\nTracefile: ' + str(tracefile))
 
 	# scale to init config
 	do_docker_scale_init()
@@ -1217,7 +1209,7 @@ def run_exp(users, log_dir):
 
 	locust_p = run_locust_docker_compose(
 		docker_compose_file=LocustDockerCompose,
-		duration=ExpTime+120, users=users, workers=0, quiet=True)
+		tracefile=tracefile, workers=32, quiet=True)
 
 	assert(locust_p != None)
 
@@ -1235,7 +1227,7 @@ def run_exp(users, log_dir):
 	service_fail = False
 	rps_fluct = 0
 	reset_docker_scale_clock()
-	while time.time() - StartTime < ExpTime:
+	while locust_p.poll() is None:
 		cur_time = time.time()
 		if cur_time - StartTime < MeasureInterval*interval_idx:
 			time.sleep(MeasureInterval*interval_idx - (cur_time - StartTime))
@@ -1330,7 +1322,7 @@ def run_exp(users, log_dir):
 	return service_fail	# always assume that experiemnt terminates successfully
 
 def main():
-	global TestUsers
+	global TraceDir
 	global DataDir
 	global Services
 	global SetupSwarm
@@ -1373,13 +1365,14 @@ def main():
 	
 	# data collection
 	i = 0
-	while i < len(TestUsers):
-		users = TestUsers[i]
+	tracefiles = list(TraceDir.iterdir())
+	while i < len(tracefiles):
+		tracefile = tracefiles[i]
 		if Deploy:
 			k8s_deploy(benchmark_dir=BenchmarkDir, compose_file=ComposeFile,
 						namespace=Namespace, pod_count=PodCount)	# deploy benchmark
-		users_dir = DataDir / ('users_' + str(users))
-		service_fail = run_exp(users=users, log_dir=users_dir)
+		users_dir = DataDir / ('users_' + str(tracefile.stem))
+		service_fail = run_exp(tracefile=tracefile, log_dir=users_dir)
 		if not service_fail:
 			i += 1
 		time.sleep(20)

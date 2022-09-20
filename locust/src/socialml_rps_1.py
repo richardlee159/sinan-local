@@ -1,5 +1,5 @@
 import random
-from locust import FastHttpUser, task, tag, between
+from locust import FastHttpUser, LoadTestShape, task, tag, between
 import base64
 import os
 from pathlib import Path
@@ -293,3 +293,18 @@ class SocialMediaUser(FastHttpUser):
         if r.status_code > 202:
             logging.warning('read_user_timeline resp.status = %d, text=%s' %(r.status_code,
                 r.text))
+
+
+RPS = list(map(int, Path('/mnt/rps.txt').read_text().splitlines()))
+
+
+class CustomShape(LoadTestShape):
+    time_limit = len(RPS)
+    spawn_rate = 10
+
+    def tick(self):
+        run_time = self.get_run_time()
+        if run_time < self.time_limit:
+            user_count = RPS[int(run_time)]
+            return (user_count, self.spawn_rate)
+        return None
